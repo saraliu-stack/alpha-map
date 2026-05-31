@@ -16,10 +16,10 @@ Claude will generate a self-contained HTML investment mindmap and save it to you
 
 ```bash
 # Clone the repo into your global skills directory
-git clone https://github.com/parkpineventure/mindmap-skill ~/.claude/skills/mindmap-skill
+git clone https://github.com/saraliu-stack/alpha-map ~/.claude/skills/alpha-map
 
 # Or via the skills marketplace (when available)
-/skill add parkpineventure/mindmap-skill
+/skill add saraliu-stack/alpha-map
 ```
 
 ## How Claude Uses This Skill
@@ -47,6 +47,6 @@ A single `.html` file, fully self-contained (D3.js loaded via CDN). Open it in a
 ## Updating
 
 ```bash
-cd ~/.claude/skills/mindmap-skill
+cd ~/.claude/skills/alpha-map
 git pull
 ```

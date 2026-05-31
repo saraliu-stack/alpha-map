@@ -27,12 +27,12 @@ skills/mindmap/template.html
 
 ### Claude Code (recommended)
 ```bash
-/skill add parkpineventure/mindmap-skill
+/skill add saraliu-stack/alpha-map
 ```
 Or manually clone and register:
 ```bash
-git clone https://github.com/parkpineventure/mindmap-skill
-cd mindmap-skill
+git clone https://github.com/saraliu-stack/alpha-map
+cd alpha-map
 npx skills add . -g
 ```
 
@@ -41,7 +41,7 @@ Add this repository as a context source. The agent will discover `SKILL.md` auto
 
 ### OpenClaw
 ```bash
-clawhub install mindmap-skill
+clawhub install alpha-map
 ```
 
 ### Manual (any agent)
@@ -80,7 +80,7 @@ This calls the Anthropic API directly and produces the same HTML output.
 ## File Structure
 
 ```
-mindmap-skill/
+alpha-map/
 ├── skills/
 │   └── mindmap/
 │       ├── SKILL.md          # Runtime spec (source of truth)

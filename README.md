@@ -2,7 +2,7 @@
 
 > An AI agent skill that generates interactive, investment-grade supply chain mindmaps for any sector, narrative, or macro theme.
 
-**[🛰️ Live Demo — Space Economy](https://parkpineventure.github.io/mindmap-skill/examples/space-economy.html)**  &nbsp;|&nbsp;  **[🌐 Homepage](https://parkpineventure.github.io/mindmap-skill/)**
+**[🛰️ Live Demo — Space Economy](https://saraliu-stack.github.io/alpha-map/examples/space-economy.html)**  &nbsp;|&nbsp;  **[🌐 Homepage](https://saraliu-stack.github.io/alpha-map/)**
 
 ---
 
@@ -31,17 +31,17 @@ The skill writes a single self-contained HTML file to your working directory. Op
 
 ### Claude Code
 ```bash
-/skill add parkpineventure/mindmap-skill
+/skill add saraliu-stack/alpha-map
 ```
 
 ### Agent Skills CLI
 ```bash
-npx skills add parkpineventure/mindmap-skill -g
+npx skills add saraliu-stack/alpha-map -g
 ```
 
 ### Manual (any agent)
 ```bash
-git clone https://github.com/parkpineventure/mindmap-skill
+git clone https://github.com/saraliu-stack/alpha-map
 ```
 Then point your agent at `skills/mindmap/SKILL.md`.
 
@@ -104,7 +104,7 @@ The agent uses its own knowledge (and web search if available) to populate real 
 
 ## Example Output
 
-**[🛰️ Space Economy / Starlink](https://parkpineventure.github.io/mindmap-skill/examples/space-economy.html)**
+**[🛰️ Space Economy / Starlink](https://saraliu-stack.github.io/alpha-map/examples/space-economy.html)**
 
 Includes: Rad-Hard ICs (critical bottleneck), Rare Earths (critical), Launch & Propulsion, Satellite Manufacturing, Autonomous Vehicles, Defense & National Security, IoT & Smart Infrastructure, Earth Observation, and more — with 50+ public firms, revenue/growth data, and full investment theses.
 
@@ -113,7 +113,7 @@ Includes: Rad-Hard ICs (critical bottleneck), Rare Earths (critical), Launch & P
 ## Skill File Structure
 
 ```
-mindmap-skill/
+alpha-map/
 ├── skills/
 │   └── mindmap/
 │       ├── SKILL.md          ← Runtime spec (source of truth for all agents)

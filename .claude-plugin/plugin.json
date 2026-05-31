@@ -4,8 +4,8 @@
   "description": "Generate interactive investment-grade supply chain mindmaps for any sector, narrative, or macro theme. Outputs a self-contained HTML file with D3.js visualization, Investment Brief sidebar, fullscreen overlay, and filter controls.",
   "author": "ParkPine Venture",
   "license": "MIT",
-  "repository": "https://github.com/parkpineventure/mindmap-skill",
-  "homepage": "https://parkpineventure.github.io/mindmap-skill",
+  "repository": "https://github.com/saraliu-stack/alpha-map",
+  "homepage": "https://saraliu-stack.github.io/alpha-map",
   "skill": "skills/mindmap/SKILL.md",
   "commands": [
     {

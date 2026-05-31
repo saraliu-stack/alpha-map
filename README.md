@@ -169,4 +169,4 @@ Data is AI-generated for research and educational purposes only. Not financial a
 
 MIT — free to use, fork, and modify. Pull requests welcome.
 
-Built by **ParkPine Venture** · Powered by **Anthropic Claude** · Visualized with **D3.js v7**
+Built by **Sara Liu** · Powered by **Anthropic Claude** · Visualized with **D3.js v7**

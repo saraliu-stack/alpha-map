@@ -1,0 +1,1392 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Economy — Investment Guide</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#f0f4f8; font-family:'Segoe UI',system-ui,Arial,sans-serif; overflow:hidden; color:#1e2d3d; }
+
+/* ── HEADER ── */
+#header {
+  position:fixed; top:0; left:0; right:0; z-index:200; height:64px;
+  background:#ffffff;
+  border-bottom:2px solid #e2e8f0;
+  box-shadow:0 2px 12px rgba(0,40,100,0.08);
+  padding:0 24px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+#header h1 { font-size:18px; font-weight:700; color:#1a2d4a; letter-spacing:0.2px; }
+#header p  { font-size:12px; color:#64748b; margin-top:3px; }
+.starlink-badge {
+  background:linear-gradient(135deg,#1d4ed8,#2563eb);
+  border-radius:8px;
+  padding:7px 14px; font-size:12px; color:#ffffff; font-weight:600;
+  box-shadow:0 2px 10px rgba(37,99,235,0.3);
+  white-space:nowrap;
+}
+
+/* ── LEFT PANEL ── */
+#left-panel {
+  position:fixed; top:64px; left:0; bottom:0; width:220px; z-index:100;
+  background:#ffffff;
+  border-right:1px solid #e2e8f0;
+  box-shadow:2px 0 8px rgba(0,0,0,0.04);
+  display:flex; flex-direction:column; padding:18px 14px;
+  overflow-y:auto;
+}
+#left-panel h3 {
+  font-size:10px; text-transform:uppercase; letter-spacing:1.5px;
+  color:#94a3b8; margin-bottom:10px; margin-top:4px;
+  padding-bottom:6px; border-bottom:1px solid #f1f5f9;
+}
+.filter-btn {
+  display:block; width:100%; text-align:left; padding:8px 10px;
+  border-radius:8px; border:none; background:transparent;
+  color:#64748b; font-size:13px; cursor:pointer; margin-bottom:3px;
+  transition:all 0.18s; font-family:inherit;
+}
+.filter-btn:hover { background:#f1f5f9; color:#1e40af; padding-left:14px; }
+.filter-btn.active {
+  background:linear-gradient(90deg,#eff6ff,#f8faff);
+  color:#1d4ed8; border-left:3px solid #2563eb; padding-left:11px; font-weight:600;
+}
+
+.legend-section { margin-top:18px; }
+.legend-item { display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:12px; color:#64748b; }
+.leg-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.leg-line { width:20px; height:3px; border-radius:2px; flex-shrink:0; }
+
+/* ── RIGHT PANEL ── */
+#right-panel {
+  position:fixed; top:64px; right:0; bottom:0; width:340px; z-index:100;
+  background:#ffffff;
+  border-left:1px solid #e2e8f0;
+  box-shadow:-2px 0 8px rgba(0,0,0,0.04);
+  display:flex; flex-direction:column; overflow:hidden;
+  transition:width 0.28s cubic-bezier(.4,0,.2,1);
+}
+#panel-placeholder {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  height:100%; text-align:center; padding:28px;
+}
+#panel-placeholder .ph-icon { font-size:44px; margin-bottom:14px; opacity:0.35; }
+#panel-placeholder .ph-title { font-size:15px; font-weight:600; color:#94a3b8; margin-bottom:8px; }
+#panel-placeholder p { font-size:12.5px; line-height:1.7; color:#cbd5e1; }
+#panel-content { display:none; flex-direction:column; height:100%; overflow:hidden; }
+
+/* Panel top bar with expand button */
+#panel-top {
+  padding:16px 18px 12px; border-bottom:1px solid #e2e8f0;
+  flex-shrink:0; background:#f8fafc;
+  position:relative;
+}
+#expand-btn {
+  position:absolute; top:12px; right:14px;
+  width:28px; height:28px; border-radius:7px; cursor:pointer;
+  background:#eff6ff; border:1px solid #bfdbfe;
+  color:#2563eb; font-size:14px;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.18s; z-index:2; flex-shrink:0;
+}
+#expand-btn:hover { background:#dbeafe; transform:scale(1.1); }
+
+.panel-name { font-size:17px; font-weight:700; color:#0f172a; margin-bottom:6px; line-height:1.2; padding-right:36px; }
+.panel-badges { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:10px; align-items:center; }
+.type-tag { font-size:11px; padding:3px 9px; border-radius:5px; font-weight:700; letter-spacing:0.5px; }
+.tag-up   { background:#dbeafe; color:#1d4ed8; border:1px solid #bfdbfe; }
+.tag-down { background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; }
+.tag-hub  { background:#ede9fe; color:#6d28d9; border:1px solid #ddd6fe; }
+
+.metrics-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.metric-box {
+  background:#ffffff; border:1px solid #e2e8f0;
+  border-radius:8px; padding:9px 11px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.04);
+}
+.metric-label { font-size:10px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:4px; }
+.metric-value { font-size:13px; font-weight:700; color:#0f172a; }
+
+#panel-scroll { flex:1; overflow-y:auto; padding:0 18px 20px; }
+#panel-scroll::-webkit-scrollbar { width:4px; }
+#panel-scroll::-webkit-scrollbar-track { background:#f8fafc; }
+#panel-scroll::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:2px; }
+
+/* ── FULLSCREEN OVERLAY ── */
+#panel-overlay {
+  display:none;
+  position:fixed; inset:0; z-index:500;
+  background:rgba(15,23,42,0.55);
+  backdrop-filter:blur(3px);
+  align-items:center; justify-content:center;
+}
+#panel-overlay.open { display:flex; }
+
+#overlay-card {
+  background:#ffffff; border-radius:16px;
+  width:min(900px, 94vw); height:min(88vh, 860px);
+  display:flex; flex-direction:column;
+  box-shadow:0 24px 64px rgba(0,0,0,0.2);
+  overflow:hidden;
+  animation:overlayIn 0.22s cubic-bezier(.4,0,.2,1);
+}
+@keyframes overlayIn { from{opacity:0;transform:scale(0.95)} to{opacity:1;transform:scale(1)} }
+
+#overlay-top {
+  padding:20px 24px 14px;
+  border-bottom:1px solid #e2e8f0;
+  background:#f8fafc; flex-shrink:0;
+  display:flex; align-items:flex-start; gap:12px;
+}
+#overlay-top .ov-info { flex:1; }
+#close-overlay {
+  flex-shrink:0; width:32px; height:32px; border-radius:8px;
+  background:#f1f5f9; border:1px solid #e2e8f0;
+  color:#64748b; font-size:16px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.15s; margin-top:2px;
+}
+#close-overlay:hover { background:#fee2e2; border-color:#fca5a5; color:#dc2626; }
+
+.ov-name { font-size:22px; font-weight:800; color:#0f172a; margin-bottom:8px; line-height:1.15; }
+.ov-badges { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+
+#overlay-metrics {
+  display:flex; gap:12px; padding:14px 24px;
+  border-bottom:1px solid #e2e8f0; flex-wrap:wrap; background:#fff;
+}
+#overlay-metrics .metric-box { min-width:140px; flex:1; }
+
+#overlay-scroll {
+  flex:1; overflow-y:auto; padding:0 24px 28px;
+}
+#overlay-scroll::-webkit-scrollbar { width:5px; }
+#overlay-scroll::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:3px; }
+
+/* Wider table in overlay */
+#overlay-scroll .firms-table td { font-size:13px; padding:9px 10px; }
+#overlay-scroll .firms-table th { padding:8px 10px; }
+#overlay-scroll .thesis-text { font-size:13.5px; line-height:1.8; }
+#overlay-scroll .bb-box li { font-size:12.5px; }
+#overlay-scroll .private-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px;
+}
+
+.tension-tag {
+  display:inline-flex; align-items:center; gap:5px;
+  font-size:11px; font-weight:700; padding:3px 8px; border-radius:5px;
+}
+.t-critical { background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; }
+.t-high     { background:#ffedd5; color:#c2410c; border:1px solid #fdba74; }
+.t-medium   { background:#fef9c3; color:#a16207; border:1px solid #fde047; }
+.t-demand   { background:#dcfce7; color:#15803d; border:1px solid #86efac; }
+
+.section-title {
+  font-size:11px; text-transform:uppercase; letter-spacing:1.2px; color:#94a3b8;
+  margin:16px 0 8px; padding-bottom:5px; border-bottom:1px solid #f1f5f9;
+  font-weight:600;
+}
+
+.firms-table { width:100%; border-collapse:collapse; }
+.firms-table th {
+  font-size:10px; color:#94a3b8; text-align:left; padding:4px 6px;
+  text-transform:uppercase; letter-spacing:0.5px;
+}
+.firms-table td { font-size:12.5px; padding:6px 6px; border-bottom:1px solid #f1f5f9; color:#334155; vertical-align:middle; }
+.firms-table tr:last-child td { border-bottom:none; }
+.firms-table tr:hover td { background:#f8fafc; }
+.ticker-cell { font-weight:700; font-family:'Courier New',monospace; color:#1d4ed8; font-size:13px; }
+.firm-name-cell { font-weight:600; color:#1e293b; font-size:12.5px; }
+.firm-role { font-size:11px; color:#94a3b8; margin-top:2px; font-weight:400; line-height:1.4; }
+.growth-pos { color:#16a34a; font-weight:700; }
+.growth-neg { color:#dc2626; font-weight:700; }
+.growth-neu { color:#d97706; font-weight:700; }
+
+.signal {
+  font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; letter-spacing:0.3px; white-space:nowrap;
+}
+.sig-sb  { background:#dcfce7; color:#15803d; border:1px solid #86efac; }
+.sig-buy { background:#dbeafe; color:#1d4ed8; border:1px solid #93c5fd; }
+.sig-hold{ background:#fef9c3; color:#a16207; border:1px solid #fde047; }
+.sig-cau { background:#ffedd5; color:#c2410c; border:1px solid #fdba74; }
+.sig-avd { background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; }
+.sig-spec{ background:#ede9fe; color:#6d28d9; border:1px solid #c4b5fd; }
+
+.private-item {
+  background:#f8fafc; border:1px solid #e2e8f0;
+  border-radius:8px; padding:10px 12px; margin-bottom:6px;
+}
+.private-name { font-weight:600; color:#0f172a; font-size:13px; }
+.private-meta { font-size:11.5px; color:#64748b; margin-top:4px; line-height:1.4; }
+
+.thesis-text { font-size:13px; color:#475569; line-height:1.75; }
+
+.bull-bear { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px; }
+.bb-box { border-radius:8px; padding:12px; }
+.bb-bull { background:#f0fdf4; border:1px solid #bbf7d0; }
+.bb-bear { background:#fff1f2; border:1px solid #fecdd3; }
+.bb-title { font-size:11px; font-weight:700; margin-bottom:8px; letter-spacing:0.5px; }
+.bb-bull .bb-title { color:#15803d; }
+.bb-bear .bb-title { color:#dc2626; }
+.bb-box ul { padding-left:14px; }
+.bb-box li { font-size:11.5px; color:#475569; line-height:1.6; margin-bottom:4px; }
+
+/* ── SVG CANVAS ── */
+#canvas {
+  position:fixed; top:64px; left:220px; right:340px; bottom:30px; overflow:hidden;
+  background:#f0f4f8;
+}
+svg { display:block; width:100%; height:100%; }
+.node circle { transition:filter 0.2s, stroke-width 0.2s; }
+.node:hover circle { filter:brightness(0.88) saturate(1.3); }
+.node:hover { cursor:pointer; }
+.node text { pointer-events:none; user-select:none; }
+.link { fill:none; }
+
+/* ── INFO BAR ── */
+#info-bar {
+  position:fixed; bottom:0; left:220px; right:340px; z-index:100;
+  background:#ffffff; border-top:1px solid #e2e8f0;
+  padding:7px 20px; font-size:12px; color:#94a3b8;
+  display:flex; justify-content:space-between; align-items:center;
+  height:30px;
+}
+
+/* ── ZOOM BTNS ── */
+#zoom-btns {
+  position:fixed; bottom:40px; left:228px; z-index:100;
+  display:flex; flex-direction:column; gap:5px;
+}
+.ctrl-btn {
+  width:36px; height:36px; border-radius:8px; cursor:pointer;
+  background:#ffffff; border:1px solid #e2e8f0;
+  color:#2563eb; font-size:18px; display:flex; align-items:center; justify-content:center;
+  transition:all 0.18s; box-shadow:0 2px 6px rgba(0,0,0,0.08);
+}
+.ctrl-btn:hover { background:#eff6ff; border-color:#93c5fd; transform:scale(1.08); }
+
+/* ── PULSING ANIMATION ── */
+@keyframes pulse { 0%,100%{ opacity:0.8; } 50%{ opacity:0.15; } }
+.pulse-ring { animation:pulse 2.2s ease-in-out infinite; }
+
+/* ── SUBTLE CANVAS VIGNETTE ── */
+#canvas::before {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(ellipse 65% 65% at 50% 50%, transparent 55%, rgba(226,232,240,0.4) 100%);
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="header">
+  <div>
+    <h1>Space Economy Supply Chain — Investment Guide</h1>
+    <p>SpaceX Starship · Starlink 10M subs · $11.4B rev · Upstream bottlenecks · Downstream beneficiaries</p>
+  </div>
+  <div class="starlink-badge">Starlink: $11.4B rev · 63% EBITDA · 97% sat-internet share</div>
+</div>
+
+<!-- LEFT PANEL -->
+<div id="left-panel">
+  <h3>Filter View</h3>
+  <button class="filter-btn active" data-filter="all">All Sectors</button>
+  <button class="filter-btn" data-filter="upstream">Upstream Only</button>
+  <button class="filter-btn" data-filter="downstream">Downstream Only</button>
+  <button class="filter-btn" data-filter="critical">Critical Bottlenecks</button>
+  <button class="filter-btn" data-filter="conviction5">5-Star Conviction</button>
+
+  <div class="legend-section">
+    <h3 style="margin-top:4px;">Node Color</h3>
+    <div class="legend-item"><div class="leg-dot" style="background:#ef4444;box-shadow:0 0 5px #ef4444"></div>Critical Bottleneck</div>
+    <div class="legend-item"><div class="leg-dot" style="background:#f97316"></div>High Risk Supply</div>
+    <div class="legend-item"><div class="leg-dot" style="background:#eab308"></div>Medium / Balanced</div>
+    <div class="legend-item"><div class="leg-dot" style="background:#22c55e"></div>Demand-Led Growth</div>
+    <div class="legend-item"><div class="leg-dot" style="background:#3b82f6"></div>Hub / Center</div>
+    <div class="legend-item" style="margin-top:4px;"><div class="leg-line" style="background:linear-gradient(90deg,#3b82f6,#6366f1)"></div>Upstream link</div>
+    <div class="legend-item"><div class="leg-line" style="background:linear-gradient(90deg,#22c55e,#10b981)"></div>Downstream link</div>
+  </div>
+
+</div>
+
+<!-- RIGHT PANEL -->
+<div id="right-panel">
+  <div id="panel-placeholder">
+    <div class="ph-icon">🛰️</div>
+    <div class="ph-title">Investment Brief</div>
+    <p>Click any sector bubble to see public tickers, revenue, growth signals, supply tension, thesis, and bull/bear analysis.</p>
+  </div>
+  <div id="panel-content"></div>
+</div>
+
+<!-- FULLSCREEN OVERLAY -->
+<div id="panel-overlay">
+  <div id="overlay-card">
+    <div id="overlay-top">
+      <div class="ov-info">
+        <div class="ov-name" id="ov-name"></div>
+        <div class="ov-badges" id="ov-badges"></div>
+      </div>
+      <button id="close-overlay" title="Close">✕</button>
+    </div>
+    <div id="overlay-metrics"></div>
+    <div id="overlay-scroll"></div>
+  </div>
+</div>
+
+<!-- CANVAS -->
+<div id="canvas">
+  <svg id="mindmap"></svg>
+</div>
+
+<!-- INFO BAR -->
+<div id="info-bar">
+  <span>Scroll to zoom · Drag to pan · Click bubble to expand/collapse &amp; open Brief · ⤢ to fullscreen</span>
+  <span>Data: May 2026 — ParkPine Venture Research</span>
+</div>
+
+<!-- ZOOM BUTTONS -->
+<div id="zoom-btns">
+  <button class="ctrl-btn" id="zi">+</button>
+  <button class="ctrl-btn" id="zo">&#8722;</button>
+  <button class="ctrl-btn" id="zr">&#8962;</button>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const DATA = {
+  id:'root', name:'Space Economy\nEcosystem', type:'root', risk:0, conviction:0,
+  tam:'—', supplyTension:'hub',
+  tickers:[],
+  desc:'Centered on SpaceX Starship (fully reusable launch) and Starlink (10M subscribers, $11.4B revenue, 63% EBITDA margin, 97% satellite-internet market share). This ecosystem reshapes manufacturing, semiconductors, autonomous transport, and global connectivity.',
+  publicFirms:[], privateFirms:['SpaceX (~$350B valuation, private)'],
+  thesis:'The Starlink narrative is simple: the world\'s cheapest, most ubiquitous internet layer enabling every downstream industry from autonomous vehicles to precision agriculture. Starship makes deploying satellites trivially cheap. The supply chain bottlenecks (rad-hard chips, rare earths) are investable structural constraints with pricing power.',
+  bull:['Starlink IPO would be largest in history','Starship reusability reduces launch cost 90%+','10M subscribers doubling every ~18 months'],
+  bear:['SpaceX is private — limited direct investment','Regulatory fragmentation across 160+ countries','Geopolitical ASAT risk'],
+  children:[
+
+  // ══ UPSTREAM ════════════════════════════════════════════════════════════════
+
+  { id:'u-launch', name:'Launch &\nPropulsion', type:'upstream', risk:3, conviction:4,
+    tam:'$50B by 2030', supplyTension:'high',
+    tickers:['RKLB','NOC','BA'],
+    desc:'Rocket manufacturing and launch operations. Starship + Falcon 9 reusability is disrupting cost structures. Engine turbopumps are the rate-limiting production factor.',
+    publicFirms:[
+      {ticker:'RKLB',name:'Rocket Lab',rev:'$602M',growth:'+38%',cap:'~$20B',signal:'sig-buy',role:'Best public pure-play launch provider; Electron rocket + Neutron in dev targeting medium-lift Kuiper manifest'},
+      {ticker:'NOC', name:'Northrop Grumman',rev:'$43B total',growth:'+5%',cap:'$65B',signal:'sig-hold',role:'Heritage solid rocket motors (GEM, Castor) and space vehicle integration for government programs'},
+      {ticker:'AJRD',name:'Aerojet Rocketdyne',rev:'$2.4B',growth:'+6%',cap:'$4.5B',signal:'sig-hold',role:'Sole US producer of RL-10 upper-stage engine; supplies propulsion for Atlas V, Vulcan, and SLS'},
+    ],
+    privateFirms:[
+      {name:'SpaceX',meta:'~$350B val · Starship/Falcon · dominant'},
+      {name:'Blue Origin',meta:'private · New Shepard + New Glenn'},
+      {name:'Firefly Aerospace',meta:'private · Alpha rocket · growing'},
+    ],
+    thesis:'Starship + Amazon Kuiper are forcing 10x launch cadence. RKLB is the best public pure-play — $602M revenue in 2025 (+38%), $2.2B backlog, winning SDA + NRO contracts. Engine turbopumps are the single-point rate constraint. SpaceX produces ~500 Raptor engines/year but turbopump machining limits further scale.',
+    bull:['RKLB $2.2B backlog growing 73% YoY','Neutron medium-lift rocket targets Kuiper manifest','Reusable market forecast >$50B by 2030'],
+    bear:['SpaceX vertical integration narrows addressable market','Starship development delays (5 launches in 2025 vs 25 target)'],
+    children:[
+      { id:'u-engines', name:'Rocket Engines\n& Turbopumps', type:'upstream', risk:4, conviction:4,
+        tam:'~$8B by 2030', supplyTension:'critical',
+        tickers:['RKLB','AJRD'],
+        desc:'Raptor engine turbopumps are the single most acute manufacturing bottleneck in the space economy. SpaceX produces ~500 Raptors/year but turbopump tolerances limit further scale.',
+        publicFirms:[
+          {ticker:'RKLB',name:'Rocket Lab (Rutherford/Archimedes)',rev:'$602M',growth:'+38%',cap:'~$20B',signal:'sig-buy',role:'Manufactures Rutherford (Electron) and developing Archimedes (Neutron); owns full engine production in-house'},
+          {ticker:'AJRD',name:'Aerojet Rocketdyne',rev:'$2.4B',growth:'+6%',cap:'$4.5B',signal:'sig-hold',role:'Heritage engine maker; RL-10 upper stage powers Centaur and ACES — irreplaceable for DOD upper-stage missions'},
+        ],
+        privateFirms:[
+          {name:'SpaceX (Raptor)',meta:'~500/yr · turbopump bottleneck · in-house'},
+          {name:'Ursa Major Technologies',meta:'private · Hadley engine · venture-backed'},
+        ],
+        thesis:'Turbopump machining requires 5-axis CNC with sub-micron tolerances. Only a handful of shops globally can do this at volume. SpaceX\'s Raptor production is the world\'s most complex engine program. Any company supplying turbopump components or precision machining has structural pricing power.',
+        bull:['Starship target 1,000+ launches/yr = 1,000+ engines/yr demand','Turbopump machining is a durable moat — 10+ years to replicate'],
+        bear:['SpaceX vertically integrates everything it can','Electric pump-fed engines (Rocket Lab Rutherford) reduce turbopump dependency'],
+      },
+      { id:'u-fuels', name:'Propellants\nLOX / CH4', type:'upstream', risk:2, conviction:2,
+        tam:'$4B by 2028', supplyTension:'medium',
+        tickers:['LIN','APD','ALB'],
+        desc:'Liquid oxygen and methane (Starship) or RP-1 (Falcon 9). LOX from air separation is well-established. Methane is abundant. Not a structural bottleneck.',
+        publicFirms:[
+          {ticker:'LIN',name:'Linde plc (LOX/LNG)',rev:'$33B',growth:'+5%',cap:'$215B',signal:'sig-hold',role:'World\'s largest industrial gas company; primary LOX supplier under long-term contracts at Kennedy Space Center and Vandenberg'},
+          {ticker:'APD',name:'Air Products',rev:'$12B',growth:'+4%',cap:'$50B',signal:'sig-hold',role:'Major LOX and LH2 supplier; provides cryogenic ground support equipment for multiple US launch sites'},
+        ],
+        privateFirms:[{name:'Chart Industries',meta:'cryogenic equipment supplier'},{name:'Air Liquide',meta:'FR listed · LOX supplier'}],
+        thesis:'Propellants are not a bottleneck. LOX and methane are industrial commodities with ample supply. Investment thesis is weak here unless Mars ISRU (in-situ fuel production) becomes a near-term programme.',
+        bull:['Scale LOX demand from Starship creates volume contracts for Linde/Air Products'],
+        bear:['Commodity product — no pricing power','Mars ISRU is a 20+ year story'],
+      },
+      { id:'u-thermal', name:'Thermal Protection\nTiles', type:'upstream', risk:4, conviction:3,
+        tam:'$1.5B by 2028', supplyTension:'high',
+        tickers:['HXL','CRS'],
+        desc:'Starship ceramic hexagonal tiles must be individually bonded — currently rate-limiting Starship production. Each tile is hand-fitted with custom shimming.',
+        publicFirms:[
+          {ticker:'HXL',name:'Hexcel Corp (composites)',rev:'$1.8B',growth:'+8%',cap:'$5B',signal:'sig-hold',role:'Supplies carbon fiber composite panels and high-temp ceramic fiber used in Starship\'s thermal protection structure'},
+          {ticker:'CRS',name:'Carpenter Technology (specialty alloys)',rev:'$2.8B',growth:'+12%',cap:'$4B',signal:'sig-hold',role:'Produces nickel superalloys and titanium alloys for heat shield attachment hardware and reentry structural frames'},
+        ],
+        privateFirms:[{name:'SpaceX (in-house tile program)',meta:'Bottleneck — scaling robotically'},{name:'Applied Aerospace Structures',meta:'Heritage ablative TPS'}],
+        thesis:'SpaceX is automating tile installation but it remains a constraint on Starship reuse cadence. Companies supplying high-temp ceramic materials, silica fiber, and precision bonding agents have a niche moat.',
+        bull:['Automated tile installation is a huge R&D investment — durable complexity barrier'],
+        bear:['SpaceX is solving this in-house — limits third-party opportunity'],
+      },
+    ]
+  },
+
+  { id:'u-semi', name:'Semiconductors\n& Rad-Hard', type:'upstream', risk:5, conviction:5,
+    tam:'$4.9B by 2034', supplyTension:'critical',
+    tickers:['MCHP','TXN','AMD'],
+    desc:'Most critical upstream bottleneck. Only 3 US Trusted Foundries produce true rad-hard ICs. Lead times 52-78 weeks. Demand surging from Starlink V2, SDA, and DOD.',
+    publicFirms:[
+      {ticker:'MCHP',name:'Microchip Technology',rev:'$4.2B',growth:'-8% (cycle)',cap:'$28B',signal:'sig-hold',role:'Operates a US Trusted Foundry in Colorado Springs; primary domestic supplier of ITAR-controlled rad-hard microcontrollers'},
+      {ticker:'TXN', name:'Texas Instruments',rev:'$15.6B',growth:'+7%',cap:'$195B',signal:'sig-hold',role:'Supplies space-grade analog ICs, voltage regulators, and interface chips used in virtually every satellite power bus'},
+      {ticker:'AMD', name:'AMD (Xilinx rad-hard FPGAs)',rev:'$25B',growth:'+25%',cap:'$220B',signal:'sig-buy',role:'Xilinx Kintex rad-hard FPGAs are the satellite industry standard for reconfigurable signal and payload processing'},
+    ],
+    privateFirms:[
+      {name:'BAE Systems Manassas (LON: BA.)',meta:'Trusted Foundry #1 · primary rad-hard fab'},
+      {name:'Cobham AES / Frontgrade',meta:'Trusted Foundry ecosystem · fabless rad-hard'},
+      {name:'Honeywell Plymouth (HON)',meta:'Trusted Foundry #3 · specialty rad-hard'},
+    ],
+    thesis:'Only 3 US Trusted Foundries can produce ITAR-controlled rad-hard ICs (BAE Manassas, Honeywell Plymouth, Microchip Colorado Springs). Lead times are 52-78 weeks and demand from Starlink V2 + SDA Proliferated Warfighter Space Architecture + DOD far exceeds supply. This is a structural oligopoly protected by export controls, security clearances, and decades of process qualification. The highest-conviction bottleneck in the entire chain.',
+    bull:['ITAR export controls prevent all foreign competition in DOD-grade rad-hard','Every new LEO satellite carries 10s to 100s of rad-hard ICs','SDA $15B+ PWSA program creates decade-long demand signal','Lead times 52-78 weeks signal severe underinvestment in capacity'],
+    bear:['Vorago/COTS shielding could reduce rad-hard premium for commercial satellites','SpaceX partially bypasses rad-hard with mass-deployment strategy (accept failures)'],
+    children:[
+      { id:'u-radhardchips', name:'Rad-Hard ICs\n& FPGAs', type:'upstream', risk:5, conviction:5,
+        tam:'$1.9B 2026 → $2.9B 2036', supplyTension:'critical',
+        tickers:['MCHP','AMD','TXN'],
+        desc:'True space-grade rad-hard ICs. Lead times 52-78 weeks. Market $1.9B growing to $2.9B by 2036. 3 US Trusted Foundries supply virtually all DOD-grade components.',
+        publicFirms:[
+          {ticker:'MCHP',name:'Microchip (Colorado Springs fab)',rev:'$4.2B',growth:'-8% (cycle)',cap:'$28B',signal:'sig-hold',role:'Owns a US Trusted Foundry; manufactures ITAR-controlled rad-hard ASICs for DOD satellites — one of only 3 fabs globally'},
+          {ticker:'AMD', name:'AMD Xilinx (Kintex rad-hard FPGA)',rev:'$25B',growth:'+25%',cap:'$220B',signal:'sig-buy',role:'Rad-hard Kintex FPGAs power the signal processing payload of most US government and commercial LEO satellites'},
+          {ticker:'TXN', name:'Texas Instruments (space-grade)',rev:'$15.6B',growth:'+7%',cap:'$195B',signal:'sig-hold',role:'Supplies space-qualified analog, power management, and data converter ICs used in every satellite subsystem'},
+        ],
+        privateFirms:[{name:'BAE Systems (Manassas VA)',meta:'Primary rad-hard ASIC fab'},{name:'Frontgrade Technologies',meta:'Fabless rad-hard integrator'}],
+        thesis:'The most acute bottleneck in the entire space economy. 3 fabs supply 95%+ of US rad-hard silicon. Lead times of 52-78 weeks are a direct indicator of extreme supply-demand mismatch. MCHP owns the Colorado Springs Trusted Foundry — any capacity expansion announcement is a strong catalyst.',
+        bull:['Capacity expansion takes 5-10 years — shortage is structural','DOD mandating domestic supply for national security programs'],
+        bear:['Relatively small market ($2-3B) — limited liquidity in pure-plays','Cycle risk: MCHP is in a commercial down-cycle masking space strength'],
+      },
+      { id:'u-phased', name:'Phased Array\nAntennas', type:'upstream', risk:4, conviction:3,
+        tam:'$8B by 2028', supplyTension:'high',
+        tickers:['QCOM','VSAT','SWIR'],
+        desc:'Starlink user terminals use flat phased-array antennas with thousands of GaN elements. SpaceX produces ~3,000 dishes/day but GaN wafer supply is constrained.',
+        publicFirms:[
+          {ticker:'QCOM',name:'Qualcomm (GaN/CMOS RF)',rev:'$43B',growth:'+11%',cap:'$170B',signal:'sig-buy',role:'GaN RF front-end and beamforming chipsets power the phased array antennas in Starlink terminals and next-gen base stations'},
+          {ticker:'VSAT',name:'Viasat (antenna systems)',rev:'$4.6B',growth:'+12%',cap:'$2.5B',signal:'sig-cau',role:'Legacy flat-panel and parabolic antenna manufacturer; pivoting toward next-gen terminal hardware as GEO business declines'},
+        ],
+        privateFirms:[{name:'Kymeta',meta:'Flat-panel sat antenna · venture-backed'},{name:'Intellian',meta:'KR listed · maritime antennas'}],
+        thesis:'GaN wafer supply for phased-array antennas is tight. QCOM\'s RF/mmWave business benefits directly from phased array proliferation across Starlink terminals, 5G base stations, and future D2C devices.',
+        bull:['QCOM NTN modems in every next-gen LTE chipset'],
+        bear:['SpaceX manufactures Dishy in-house — limited third-party antenna opportunity'],
+      },
+      { id:'u-asic', name:'Custom ASICs\n& Satellite Chips', type:'upstream', risk:4, conviction:4,
+        tam:'$3B by 2030', supplyTension:'high',
+        tickers:['TSM','AVGO','QCOM'],
+        desc:'Each Starlink V2 satellite contains ~100 custom ASICs for beamforming, routing, and control. TSMC/Samsung fab. Taiwan geopolitical risk is the principal concern.',
+        publicFirms:[
+          {ticker:'TSM', name:'TSMC (primary fab)',rev:'$88B',growth:'+34%',cap:'$850B',signal:'sig-buy',role:'Fabricates virtually all advanced satellite ASICs at 5nm/3nm; the single most critical chokepoint for constellation expansion'},
+          {ticker:'AVGO',name:'Broadcom (ASIC design)',rev:'$51B',growth:'+43%',cap:'$750B',signal:'sig-buy',role:'Designs high-value custom ASICs for beamforming, routing, and intersatellite link processing in LEO constellation payloads'},
+          {ticker:'QCOM',name:'Qualcomm (modem chips)',rev:'$43B',growth:'+11%',cap:'$170B',signal:'sig-buy',role:'X75/X85 chipsets with NTN support enable Starlink D2C connectivity in standard LTE handsets without hardware changes'},
+        ],
+        privateFirms:[{name:'Samsung Foundry',meta:'KR listed: 005930 · alternative fab for SpaceX'},{name:'GlobalFoundries',meta:'NASDAQ: GFS · US-based alternative'}],
+        thesis:'TSMC dominance creates geopolitical concentration risk — Taiwan Strait tensions are the key tail risk. AVGO (Broadcom) designs most of the high-value satellite ASICs. TSMC is the single most important semiconductor company for the entire space economy.',
+        bull:['TSMC expanding Arizona fab (N3/N2) reduces Taiwan concentration','AVGO ASIC revenue is high-margin, sticky, and growing 40%+'],
+        bear:['Taiwan geopolitical risk is real — TSMC fab disruption would halt all constellation expansion'],
+      },
+    ]
+  },
+
+  { id:'u-satmfg', name:'Satellite\nManufacturing', type:'upstream', risk:3, conviction:3,
+    tam:'$30B by 2030', supplyTension:'high',
+    tickers:['RKLB','NOC','LHX'],
+    desc:'Megaconstellations require volume manufacturing. Traditional primes lack capability. SpaceX is fully vertical. Amazon Kuiper needs 3,236 satellites from non-SpaceX sources.',
+    publicFirms:[
+      {ticker:'RKLB',name:'Rocket Lab (spacecraft buses)',rev:'$602M',growth:'+38%',cap:'~$20B',signal:'sig-buy',role:'High-volume spacecraft bus manufacturer winning SDA, NRO, and commercial LEO contracts — emerging challenger to legacy primes'},
+      {ticker:'NOC', name:'Northrop Grumman Space',rev:'$10.8B',growth:'-8%',cap:'$65B',signal:'sig-hold',role:'Prime integrator for classified government satellites (AEHF, SBIRS) and missile warning constellations'},
+      {ticker:'LHX', name:'L3Harris (SDA satellites)',rev:'$21B',growth:'+5%',cap:'$42B',signal:'sig-buy',role:'Won SDA Tranche 3 contract (Dec 2025, $3.5B) for 18 missile-tracking LEO satellites under PWSA program'},
+    ],
+    privateFirms:[
+      {name:'SpaceX (vertical)',meta:'~6,000 Starlink V2 in orbit · fully captive'},
+      {name:'Thales Alenia Space',meta:'FR: HO · OneWeb/Kuiper supplier'},
+      {name:'Airbus Defence & Space',meta:'EU · traditional prime'},
+    ],
+    thesis:'Traditional primes (Boeing, Northrop) are losing share to vertically integrated players. L3Harris won SDA Tranche 3 contracts ($3.5B program, Dec 2025). RKLB is emerging as the high-volume spacecraft bus manufacturer for commercial and government LEO programs.',
+    bull:['Amazon Kuiper FCC deadline: 1,618 satellites by July 2026 — orders are live','SDA PWSA $15B+ program provides decade of government demand'],
+    bear:['SpaceX dominance shrinks the non-captive TAM','Volume manufacturing is a capability gap; traditional primes are slow to adapt'],
+    children:[
+      { id:'u-solar', name:'Space Solar Panels\n& GaAs Cells', type:'upstream', risk:3, conviction:3,
+        tam:'$2B by 2028', supplyTension:'high',
+        tickers:['RKLB','BA'],
+        desc:'Each satellite needs high-efficiency GaAs solar cells (28-30% efficiency). Spectrolab (Boeing subsidiary) and Azur Space supply most of the market globally.',
+        publicFirms:[
+          {ticker:'BA',  name:'Boeing (Spectrolab subsidiary)',rev:'$66B total',growth:'+7%',cap:'$115B',signal:'sig-hold',role:'Spectrolab (Boeing subsidiary) is the world\'s largest GaAs space solar cell manufacturer, supplying most US and allied satellite programs'},
+          {ticker:'RKLB',name:'Rocket Lab (SolAero acquisition)',rev:'$602M total',growth:'+38%',cap:'~$20B',signal:'sig-buy',role:'SolAero acquisition made RKLB the #2 space solar cell manufacturer — captive supply for its own buses plus third-party revenue'},
+        ],
+        privateFirms:[{name:'Azur Space (DE)',meta:'Private · GaAs leader for Euro programs'}],
+        thesis:'RKLB acquired SolAero — the #2 space solar cell manufacturer — giving it a captive supply of GaAs cells and a third-party revenue stream. This is a key differentiator for RKLB vs peers.',
+        bull:['RKLB SolAero acquisition verticalizes spacecraft power — unique among public peers'],
+        bear:['GaAs cells market is small; limited standalone investment thesis'],
+      },
+      { id:'u-batteries', name:'Space-Grade\nBatteries', type:'upstream', risk:3, conviction:2,
+        tam:'$1.5B by 2028', supplyTension:'medium',
+        tickers:['TSLA','ALB','SQM'],
+        desc:'Li-ion batteries for eclipse operation. Must survive vacuum, radiation, temperature extremes. Lithium supply is shared with the EV industry — creating indirect competition.',
+        publicFirms:[
+          {ticker:'ALB',name:'Albemarle (lithium)',rev:'$4.3B',growth:'+15%',cap:'$9B',signal:'sig-hold',role:'Largest US lithium producer; mines the primary raw material for all satellite Li-ion cell chemistries'},
+          {ticker:'SQM', name:'SQM (lithium Chile)',rev:'$4.1B',growth:'+8%',cap:'$10B',signal:'sig-hold',role:'Chile\'s dominant lithium carbonate producer supplying global battery cathode supply chains including space-grade cells'},
+        ],
+        privateFirms:[{name:'EaglePicher Technologies',meta:'Private · primary space-grade battery supplier'},{name:'Saft (TotalEnergies)',meta:'FR: TTE · space Li-ion'}],
+        thesis:'Space battery demand is growing but small relative to EV market. ALB and SQM are better played as EV+space combined lithium demand stories rather than pure space plays.',
+        bull:['Dual demand from EVs and space creates durable lithium tailwind'],
+        bear:['Space battery market too small to move the needle on large lithium miners'],
+      },
+    ]
+  },
+
+  { id:'u-rareearth', name:'Rare Earth\n& Critical Minerals', type:'upstream', risk:5, conviction:5,
+    tam:'$10B NdPr 2026', supplyTension:'critical',
+    tickers:['MP','UUUU','LYC'],
+    desc:'China controls 90% of rare earth refining. 36% NdPr shortfall projected by 2030. US DoD has taken a $400M equity stake in MP Materials with guaranteed offtake.',
+    publicFirms:[
+      {ticker:'MP',  name:'MP Materials',rev:'~$250M',growth:'+45%',cap:'$4.5B',signal:'sig-sb',role:'Only fully integrated US rare earth mine-to-magnet company; DoD backstopped with $400M equity + 10-year floor-price offtake'},
+      {ticker:'LYC', name:'Lynas Rare Earths (ASX)',rev:'AUD$700M',growth:'+15%',cap:'AUD$7B',signal:'sig-buy',role:'World\'s largest non-Chinese heavy rare earth producer; received $258M DoD grant for US refinery — critical ex-China alternative'},
+      {ticker:'UUUU',name:'Energy Fuels',rev:'$65M',growth:'+30%',cap:'$0.8B',signal:'sig-spec',role:'US uranium miner diversifying into NdPr separation from existing White Mesa mill infrastructure — early-stage rare earth entrant'},
+    ],
+    privateFirms:[
+      {name:'China Northern Rare Earth',meta:'State-owned · controls 90% of global refining'},
+      {name:'Vital Metals',meta:'ASX: VML · early-stage Canadian deposits'},
+    ],
+    thesis:'The most structurally compelling upstream investment in the space economy. China controls 90% of NdPr processing — a geopolitical stranglehold on every satellite, EV motor, and defense system globally. NdPr shortfall of 36% by 2030 is consensus. US DoD backstopping MP Materials with $400M equity + 10-year floor price + 100% offtake. Lynas received $258M DoD grant for US refinery. This is effectively a government-guaranteed business with structural scarcity.',
+    bull:['US government effectively backstopping MP — zero credit risk on offtake','36% NdPr shortfall by 2030 is baked into consensus supply models','EV + defense + space demand compounds; China retaliatory export controls are a positive catalyst for ex-China producers','Lynas is the only scalable non-China heavy rare earth source outside China'],
+    bear:['Recycling tech could ease long-term demand (10+ year horizon)','New mine development takes 10-15 years — but that IS the moat','Price volatility if China decides to flood market temporarily'],
+    children:[
+      { id:'u-ree-gallium', name:'Gallium, Germanium\n& GaAs Wafers', type:'upstream', risk:5, conviction:4,
+        tam:'$3B by 2028', supplyTension:'critical',
+        tickers:['MP','II-VI','WOLF'],
+        desc:'Gallium and germanium — used in GaAs solar cells and RF chips — are controlled by China which imposed export restrictions in 2023. Only a handful of Western producers exist.',
+        publicFirms:[
+          {ticker:'WOLF',name:'Wolfspeed (GaN/SiC wafers)',rev:'$800M',growth:'+18%',cap:'$2B',signal:'sig-spec',role:'Produces GaN-on-SiC wafers used in high-power RF transmitters on satellites — partial Western substitute for Chinese gallium'},
+          {ticker:'MCHP',name:'Microchip (GaAs-adjacent)',rev:'$4.2B',growth:'-8%',cap:'$28B',signal:'sig-hold',role:'Fab processes include compound semiconductors; exposure to GaAs-adjacent space RF applications through specialty process lines'},
+        ],
+        privateFirms:[{name:'China (dominant)',meta:'Export restrictions imposed 2023'},{name:'5N Plus',meta:'TSX: VNP · specialty materials'}],
+        thesis:'China\'s 2023 gallium and germanium export restrictions are a direct threat to space solar cells (GaAs) and high-frequency RF chips. Western alternatives are in early development. Wolfspeed (GaN/SiC) is a partial substitute for certain RF applications.',
+        bull:['Export restrictions permanently impair Chinese supply to Western primes','DOD funding new GaAs/GaN domestic production (CHIPS Act adjacent)'],
+        bear:['Wolfspeed has execution/balance-sheet challenges','GaN not a 1:1 substitute for all GaAs applications'],
+      },
+    ]
+  },
+
+  { id:'u-software', name:'Software & AI\nMission Systems', type:'upstream', risk:2, conviction:5,
+    tam:'$50B+ defense AI by 2030', supplyTension:'demand-led',
+    tickers:['PLTR','MSFT','AMZN'],
+    desc:'Autonomous flight AI, constellation management, defense analytics, space domain awareness. No supply constraints — scales with compute. Palantir and Anduril are the dominant players.',
+    publicFirms:[
+      {ticker:'PLTR',name:'Palantir Technologies',rev:'$4.5B',growth:'+56%',cap:'$300B+',signal:'sig-sb',role:'AI Platform (AIP) and Gotham are becoming the DOD operating system for space domain awareness and mission planning'},
+      {ticker:'MSFT',name:'Microsoft (Azure Space)',rev:'$245B',growth:'+13%',cap:'$3.1T',signal:'sig-buy',role:'Azure Government Cloud hosts classified space mission data, AI inference workloads, and constellation management systems'},
+      {ticker:'AMZN',name:'Amazon (AWS GovCloud)',rev:'$638B',growth:'+9%',cap:'$2T',signal:'sig-buy',role:'AWS GovCloud provides the cloud backbone for NRO, NSA, and commercial constellation operations management'},
+    ],
+    privateFirms:[
+      {name:'Anduril Industries',meta:'$61B val · $2.2B rev · +100% YoY · Pre-IPO'},
+      {name:'Shield AI',meta:'$5B val · autonomous defense AI'},
+      {name:'Rebellion Defense',meta:'Private · DOD AI platform'},
+    ],
+    thesis:'Palantir is becoming the operating system for US defense and space intelligence. FY2025 revenue was $4.5B (+56% YoY). 2026 guidance raised to $7.2B (+71%). AIP (AI Platform) is becoming the DOD standard for data integration. Anduril doubled revenue to $2.2B in 2025 and raised at $61B in May 2026 — the fastest-growing defense prime in history. Both are direct Starshield/DOD beneficiaries. Software scales without hardware bottlenecks — this is the highest-margin play in the space chain.',
+    bull:['PLTR targeting $7.2B revenue in 2026 (+71% YoY) — acceleration, not deceleration','Anduril $61B valuation doubled in 9 months — IPO could value it at $100B+','Every space asset generates data requiring AI analytics','No manufacturing bottlenecks — pure software/services margin'],
+    bear:['PLTR trades at 150x+ revenue — priced for perfection; any miss is punished severely','Anduril is private — requires IPO/secondary for access','Government contracts have inherent budget cycle and political risk'],
+    children:[
+      { id:'u-autonomy', name:'Autonomous Flight\n& GNC Systems', type:'upstream', risk:2, conviction:3,
+        tam:'$6B by 2028', supplyTension:'demand-led',
+        tickers:['PLTR','HEI','TDG'],
+        desc:'Guidance, Navigation & Control for Starship autonomous landing, drone swarms, and missile defense. Millisecond-precision AI systems.',
+        publicFirms:[
+          {ticker:'HEI',name:'HEICO (avionics)',rev:'$3.8B',growth:'+15%',cap:'$28B',signal:'sig-hold',role:'FAA-certified avionics components and PMA parts supplier; benefits from increased avionics integration across autonomous platforms'},
+          {ticker:'TDG',name:'TransDigm (aero components)',rev:'$7.7B',growth:'+12%',cap:'$65B',signal:'sig-hold',role:'Proprietary sole-source aerospace components with structural pricing power; indirect exposure through avionics and actuation subsystems'},
+        ],
+        privateFirms:[{name:'SpaceX (proprietary GNC)',meta:'In-house advantage'},{name:'Draper Laboratory',meta:'Non-profit · GNC heritage'}],
+        thesis:'GNC is mostly proprietary at SpaceX. Third-party plays are in sub-components (IMUs, star trackers). HEICO and TDG benefit from general aerospace avionics growth.',
+        bull:['Drone and autonomous defense market creates huge GNC demand beyond space'],
+        bear:['SpaceX builds GNC in-house; limited third-party market'],
+      },
+    ]
+  },
+
+  { id:'u-regulatory', name:'Regulatory &\nSpectrum', type:'upstream', risk:4, conviction:1,
+    tam:'N/A — risk factor', supplyTension:'critical',
+    tickers:['TMUS','DISH','T'],
+    desc:'Spectrum is finite and fiercely contested. FCC/ITU filing disputes between Starlink, OneWeb, and Kuiper are ongoing. Not directly investable but creates tail risk for all space investments.',
+    publicFirms:[
+      {ticker:'TMUS',name:'T-Mobile (D2C partner with Starlink)',rev:'$81B',growth:'+8%',cap:'$290B',signal:'sig-buy',role:'Exclusive US carrier for Starlink Direct-to-Cell — the only nationwide operator offering true satellite fallback coverage'},
+      {ticker:'DISH',name:'DISH Network (spectrum holder)',rev:'$3.3B',growth:'-12%',cap:'$1.3B',signal:'sig-avd',role:'Holds 70+ MHz of mid-band spectrum licenses; asset value remains even as satellite TV business faces secular decline'},
+    ],
+    privateFirms:[{name:'ITU (UN body)',meta:'Not investable · governs spectrum globally'}],
+    thesis:'This sector is not directly investable. T-Mobile is the best regulated-spectrum proxy through its Starlink D2C partnership. DISH holds valuable spectrum but is in secular business model decline. The key tail risk: international regulators blocking Starlink (China, Russia already have; India, Brazil are pending).',
+    bull:['Current US administration is deregulatory — FCC favorable to SpaceX','T-Mobile D2C creates unique coverage density advantage'],
+    bear:['International regulators blocking Starlink in key markets','DISH spectrum may be seized/reallocated under pressure'],
+    children:[]
+  },
+
+  { id:'u-ground', name:'Ground Infrastructure\n& Stations', type:'upstream', risk:2, conviction:2,
+    tam:'$8B by 2028', supplyTension:'medium',
+    tickers:['VSAT','SATS','AMT'],
+    desc:'Launch sites, global ground stations, gateway infrastructure. LEO constellations require thousands of ground stations. Traditional GEO teleport operators face disruption.',
+    publicFirms:[
+      {ticker:'VSAT',name:'Viasat',rev:'$4.6B',growth:'+12%',cap:'$2.5B',signal:'sig-cau',role:'Operates GEO satellite ground stations globally; pivoting toward satellite component manufacturing as teleport business declines'},
+      {ticker:'SATS',name:'EchoStar/HughesNet',rev:'$2B',growth:'-3%',cap:'$1.5B',signal:'sig-avd',role:'Legacy GEO broadband (HughesNet) losing subscribers directly to Starlink; ground infrastructure has residual asset value'},
+      {ticker:'AMT', name:'American Tower (adjacent)',rev:'$11B',growth:'+5%',cap:'$95B',signal:'sig-hold',role:'Tower REIT with rooftop and real estate hosting adjacent to satellite gateway sites; indirect densification beneficiary'},
+    ],
+    privateFirms:[{name:'Intelsat',meta:'Restructured · legacy GEO teleport'},{name:'SES (LU: SESG)',meta:'Lux listed · GEO+MEO hybrid'}],
+    thesis:'Traditional GEO teleport infrastructure is being disrupted by LEO. VSAT is pivoting toward satellite component manufacturing — watch for that segment revenue. SATS (HughesNet) faces existential threat from Starlink Direct broadband. AMT benefits tangentially from ground station densification but not a clean space play.',
+    bull:['VSAT pivoting to satellite manufacturing provides optionality','Network densification drives ground station build-out demand'],
+    bear:['Legacy GEO teleport is in secular decline — disrupted by Starlink','SATS (Hughes) subscriber loss accelerating as Starlink expands'],
+    children:[]
+  },
+
+  // ══ DOWNSTREAM ══════════════════════════════════════════════════════════════
+
+  { id:'d-autonomous', name:'Autonomous\nVehicles', type:'downstream', risk:2, conviction:4,
+    tam:'$500B by 2030', supplyTension:'demand-led',
+    tickers:['TSLA','GOOGL','MBLY'],
+    desc:'Starlink enables always-on global AV connectivity — especially rural/off-highway where 5G doesn\'t reach. Tesla Cybercab entered mass production 2026. Waymo at 450K weekly rides.',
+    publicFirms:[
+      {ticker:'TSLA', name:'Tesla (FSD + Cybercab)',rev:'$97B',growth:'+3%',cap:'$800B+',signal:'sig-buy',role:'FSD software + Cybercab mass production; Starlink D2C removes the rural coverage constraint for fleet-wide OTA update delivery'},
+      {ticker:'GOOGL',name:'Alphabet (Waymo $126B embedded)',rev:'$350B',growth:'+14%',cap:'$2.1T',signal:'sig-buy',role:'Waymo is the most commercially advanced robotaxi operation globally — 450K weekly rides at effectively zero cost in a $2T stock'},
+      {ticker:'MBLY', name:'Mobileye (Intel spin-off)',rev:'$1.9B',growth:'+12%',cap:'$13B',signal:'sig-hold',role:'Hardware-agnostic AV chip supplier to Ford, BMW, VW; Starlink provides the connectivity backbone for its SuperVision ADAS fleet data'},
+      {ticker:'AUR',  name:'Aurora Innovation',rev:'$50M',growth:'+40%',cap:'$5B',signal:'sig-spec',role:'Deploying autonomous Class-8 trucking on fixed Texas corridors; Starlink provides reliable comms beyond 5G cellular coverage'},
+    ],
+    privateFirms:[
+      {name:'Waymo',meta:'$126B val · 450K weekly rides · ~$1B ARR'},
+      {name:'Zoox (Amazon)',meta:'Amazon subsidiary · purpose-built robotaxi'},
+    ],
+    thesis:'Tesla Cybercab entered mass production in March 2026. FSD subscriber base at 1.1M vehicles. Waymo achieved 450K weekly rides at $126B valuation. Starlink D2C removes the cellular coverage constraint for rural autonomous operations — expanding the AV TAM from dense urban to globally ubiquitous. Buy TSLA for Cybercab + FSD, GOOGL for Waymo optionality embedded in a $2T company.',
+    bull:['Cybercab mass production = Tesla fleet revenue model unlocking','Waymo international expansion (UK, Germany, Australia) announced 2026','Starlink D2C removes 5G coverage as the limiting factor for AV deployment'],
+    bear:['TSLA Cybercab regulatory approval delayed in California','AV competitive fragmentation — no clear winner-take-all dynamic yet','Starlink latency (20-40ms) may not be fast enough for safety-critical V2X communication'],
+    children:[
+      { id:'d-selfdriving', name:'Robotaxi &\nFSD Fleets', type:'downstream', risk:2, conviction:4,
+        tam:'$200B by 2030', supplyTension:'demand-led',
+        tickers:['TSLA','GOOGL','UBER'],
+        desc:'Tesla Cybercab in mass production 2026. Waymo 450K weekly rides. Uber partnering with Waymo for fleet deployment. Starlink enables OTA updates and fleet orchestration without 5G dependency.',
+        publicFirms:[
+          {ticker:'TSLA',name:'Tesla (Cybercab + FSD)',rev:'$97B',growth:'+3%',cap:'$800B+',signal:'sig-buy',role:'Cybercab in mass production March 2026; Starlink enables OTA FSD updates and fleet telemetry in rural zero-coverage zones'},
+          {ticker:'UBER',name:'Uber (robotaxi platform)',rev:'$43B',growth:'+16%',cap:'$185B',signal:'sig-buy',role:'Platform-agnostic robotaxi marketplace partnering with Waymo and May Mobility — wins regardless of which AV tech stack prevails'},
+          {ticker:'GOOGL',name:'Alphabet (Waymo)',rev:'$350B',growth:'+14%',cap:'$2.1T',signal:'sig-buy',role:'Waymo international expansion (UK, Germany, Australia) in 2026; Starlink BVLOS connectivity unlocks rural deployment at scale'},
+        ],
+        privateFirms:[{name:'Waymo',meta:'$126B · Lyft partnership for UK/Germany'},{name:'Zoox',meta:'Amazon · purpose-built robotaxi'}],
+        thesis:'Cybercab production is live. Uber is the platform beneficiary regardless of which AV tech wins. GOOGL provides Waymo at effectively zero cost in a $2T company. Starlink enables OTA map updates and fleet telemetry in rural and emerging market deployments.',
+        bull:['Uber + Waymo partnership means Uber wins regardless of winner in AV tech race'],
+        bear:['Insurance/regulatory frameworks lag technology by 5-7 years'],
+      },
+      { id:'d-autodrones', name:'Autonomous Drones\n& eVTOL', type:'downstream', risk:2, conviction:3,
+        tam:'$50B by 2030', supplyTension:'demand-led',
+        tickers:['JOBY','ACHR','AVAV'],
+        desc:'Drone delivery, inspection, air taxi. Starlink enables BVLOS (Beyond Visual Line of Sight) operations globally without cellular dependence — the key regulatory unlock.',
+        publicFirms:[
+          {ticker:'JOBY',name:'Joby Aviation (eVTOL)',rev:'pre-rev',growth:'N/A',cap:'$6B',signal:'sig-spec',role:'FAA Part 135 air carrier certification received; Starlink provides the BVLOS connectivity needed for urban air traffic management'},
+          {ticker:'ACHR',name:'Archer Aviation (eVTOL)',rev:'pre-rev',growth:'N/A',cap:'$3B',signal:'sig-spec',role:'US Air Force eVTOL contract provides revenue bridge; satellite connectivity enables command-link for autonomous cargo missions'},
+          {ticker:'AVAV',name:'AeroVironment (defense drones)',rev:'$700M',growth:'+18%',cap:'$5B',signal:'sig-buy',role:'Defense drone manufacturer (Switchblade loitering munition); Starlink provides the over-the-horizon data link for BVLOS drone ops'},
+        ],
+        privateFirms:[{name:'Zipline',meta:'Private · medical drone delivery · profitable'},{name:'Wing (Alphabet)',meta:'Alphabet subsidiary · commercial delivery'}],
+        thesis:'Starlink BVLOS connectivity is the regulatory unlock for commercial drone delivery at scale. AVAV is the most commercially validated defense drone play. eVTOL is speculative but FAA certification progress (JOBY, ACHR) is accelerating.',
+        bull:['FAA BVLOS rules being finalized — Starlink is the connectivity standard'],
+        bear:['eVTOL companies are pre-revenue; certification delays are the norm'],
+      },
+      { id:'d-autoshipping', name:'Autonomous Maritime\n& Trucking', type:'downstream', risk:2, conviction:3,
+        tam:'$80B by 2030', supplyTension:'demand-led',
+        tickers:['ZIM','ARCB','KNX'],
+        desc:'Starlink Maritime on 10,000+ ships. Autonomous vessels rely on constant satellite connectivity for remote monitoring. Trucking platooning benefits from reliable satellite comms.',
+        publicFirms:[
+          {ticker:'ZIM', name:'ZIM Integrated Shipping',rev:'$8B',growth:'+40%',cap:'$6B',signal:'sig-hold',role:'One of the largest Starlink Maritime fleets; satellite connectivity enables remote voyage monitoring and fuel optimization at sea'},
+          {ticker:'ARCB',name:'ArcBest (logistics AI)',rev:'$4.2B',growth:'+5%',cap:'$1.5B',signal:'sig-hold',role:'AI-driven freight optimization platform using satellite-connected fleet tracking for real-time load planning in rural corridors'},
+        ],
+        privateFirms:[{name:'Sea Machines Robotics',meta:'Private · autonomous vessel control'},{name:'Torc Robotics (Daimler)',meta:'Private · autonomous trucking'}],
+        thesis:'Starlink Maritime ($5K/month plan) is already generating significant revenue across commercial shipping fleets. 10,000+ vessels. The autonomous maritime play is a slow-burn but the connectivity revenue is live today.',
+        bull:['Starlink Maritime revenue is real and growing — 10,000+ ships at $5K/mo = $600M ARR already'],
+        bear:['Maritime autonomous is regulatory and technology limited — 10+ year full deployment horizon'],
+      },
+    ]
+  },
+
+  { id:'d-telecom', name:'Telecom &\nConnectivity', type:'downstream', risk:1, conviction:3,
+    tam:'$100B satellite internet 2030', supplyTension:'demand-led',
+    tickers:['AMZN','TMUS','VSAT'],
+    desc:'Starlink = $11.4B revenue, 10M subscribers, 97% satellite internet market share, 63% EBITDA margin. SpaceX is private. Best public proxies: AMZN (Kuiper) and TMUS (D2C partner).',
+    publicFirms:[
+      {ticker:'AMZN',name:'Amazon (Kuiper)',rev:'$638B total',growth:'+9%',cap:'$2T',signal:'sig-buy',role:'Deploying 3,236-satellite Kuiper constellation as both a standalone broadband service and edge infrastructure layer for AWS'},
+      {ticker:'TMUS',name:'T-Mobile (Starlink D2C)',rev:'$81B',growth:'+8%',cap:'$290B',signal:'sig-buy',role:'Exclusive US Starlink D2C carrier — only operator with true global coverage, giving it a structural rural subscriber advantage over VZ and AT&T'},
+      {ticker:'VSAT',name:'Viasat (ViaSat-3)',rev:'$4.6B',growth:'+12%',cap:'$2.5B',signal:'sig-cau',role:'ViaSat-3 GEO constellation competes on capacity but faces structural latency and cost disadvantages versus LEO Starlink'},
+    ],
+    privateFirms:[
+      {name:'SpaceX / Starlink',meta:'$11.4B rev · 63% EBITDA · 10M subs · ~$350B val · private'},
+      {name:'Eutelsat / OneWeb',meta:'FR: ETL · GEO+LEO hybrid · competing with Kuiper'},
+    ],
+    thesis:'Starlink is the most profitable satellite company ever built at 63% EBITDA margin. $11.4B revenue in 2025 doubling to ~$20B in 2026. However, Starlink is private. Best public plays: (1) AMZN for Kuiper optionality — Amazon must deploy 1,618 satellites by July 2026 FCC deadline, with 54 in orbit; (2) TMUS — its D2C partnership with Starlink creates unique coverage for rural subscribers that no other carrier can match. SpaceX IPO remains the event of the decade if/when it happens.',
+    bull:['3.5B unconnected people = enormous TAM yet to be touched','Starlink IPO would be largest in history; buy AMZN/TMUS as precursors','T-Mobile D2C + Starlink = the only carrier with truly global coverage'],
+    bear:['Starlink is private — no direct public investment vehicle','Kuiper is 4+ years behind Starlink and must build from a standing start','VSAT faces existential threat — subscriber losses accelerating'],
+    children:[
+      { id:'d-rural', name:'Rural Broadband\n& Digital Access', type:'downstream', risk:1, conviction:2,
+        tam:'$30B by 2030', supplyTension:'demand-led',
+        tickers:['TMUS','VZ','T'],
+        desc:'FCC RDOF $9.2B rural broadband program. Starlink winning contracts. 600M+ rural households globally are the TAM.',
+        publicFirms:[
+          {ticker:'TMUS',name:'T-Mobile (rural coverage + D2C)',rev:'$81B',growth:'+8%',cap:'$290B',signal:'sig-buy',role:'Starlink D2C partnership extends T-Mobile\'s rural coverage lead, winning RDOF subsidies and unserved market subscribers no other carrier can reach'},
+          {ticker:'VZ',  name:'Verizon (rural fixed wireless)',rev:'$134B',growth:'+1%',cap:'$170B',signal:'sig-hold',role:'Fixed wireless access expanding in rural markets but lacks a satellite partnership — competitively disadvantaged vs TMUS D2C'},
+        ],
+        privateFirms:[{name:'Starlink (SpaceX)',meta:'Winning RDOF contracts · 150Mbps rural broadband'}],
+        thesis:'Starlink is the most cost-effective rural broadband solution in history. TMUS is the best public proxy for rural connectivity growth.',
+        bull:['Government subsidies (RDOF, BEAD) de-risk rural deployment economics'],
+        bear:['Starlink dish price ($599) remains a barrier for lowest-income markets'],
+      },
+      { id:'d-aviation', name:'Aviation In-Flight\nConnectivity', type:'downstream', risk:1, conviction:3,
+        tam:'$8B by 2028', supplyTension:'demand-led',
+        tickers:['UAL','DAL','BA'],
+        desc:'Starlink Aviation: United, Hawaiian, Delta signed. Displacing Inmarsat/Panasonic with gigabit Wi-Fi. New revenue stream for airlines.',
+        publicFirms:[
+          {ticker:'UAL',name:'United Airlines (Starlink partner)',rev:'$57B',growth:'+8%',cap:'$27B',signal:'sig-hold',role:'First major US carrier deploying Starlink fleet-wide; gigabit in-flight Wi-Fi improves NPS and enables new inflight revenue streams'},
+          {ticker:'DAL',name:'Delta Air Lines (Starlink partner)',rev:'$58B',growth:'+7%',cap:'$34B',signal:'sig-hold',role:'Signed Starlink agreement for entire mainline and regional fleet; rolling out through 2026 as key passenger experience differentiator'},
+        ],
+        privateFirms:[{name:'Inmarsat (Viasat)',meta:'Being displaced by Starlink Aviation'},{name:'Panasonic Avionics',meta:'Private · losing contracts to Starlink'}],
+        thesis:'Starlink Aviation is winning the in-flight connectivity market. Airlines are beneficiaries through passenger satisfaction and potential revenue from connectivity upsell. Direct investment thesis is via Starlink (private) not airlines.',
+        bull:['Passenger willingness to pay for genuine in-flight broadband proven','Full fleet rollout for major carriers = multi-year installation revenue for SpaceX'],
+        bear:['Airlines are commoditized — connectivity is a cost, not a differentiator for investors'],
+      },
+    ]
+  },
+
+  { id:'d-defense', name:'Defense &\nNational Security', type:'downstream', risk:2, conviction:4,
+    tam:'$150B US space defense 2025-2035', supplyTension:'demand-led',
+    tickers:['LHX','RTX','LDOS','CACI'],
+    desc:'Starshield (SpaceX DOD Starlink) proved decisive in Ukraine. Space is now a warfighting domain. SDA awarded $3.5B for 72 missile-tracking satellites in Dec 2025.',
+    publicFirms:[
+      {ticker:'LHX', name:'L3Harris Technologies',rev:'$21B',growth:'+5%',cap:'$42B',signal:'sig-buy',role:'Won SDA Tranche 3 contract (Dec 2025, $3.5B) for missile-tracking satellites; also produces tactical radios linking ground forces to Starshield'},
+      {ticker:'RTX', name:'Raytheon Technologies',rev:'$82B',growth:'+8%',cap:'$160B',signal:'sig-buy',role:'Produces SM-3/SM-6 interceptors defending against ASAT threats; AEHF satellite terminal contract extended to $2.97B in 2025'},
+      {ticker:'LDOS',name:'Leidos Holdings',rev:'$16B',growth:'+8%',cap:'$22B',signal:'sig-buy',role:'IT services and ground control systems for classified DOD space programs including satellite command, control, and telemetry networks'},
+      {ticker:'CACI',name:'CACI International',rev:'$7.9B',growth:'+10%',cap:'$11B',signal:'sig-buy',role:'Cyber and electronic warfare services for space domain operations; integrates Starshield data into classified DOD intelligence workflows'},
+      {ticker:'NOC', name:'Northrop Grumman',rev:'$43B',growth:'+5%',cap:'$65B',signal:'sig-hold',role:'Develops Space-Based Infrared System (SBIRS) missile warning satellites and advanced kill vehicles for space-based missile defense'},
+    ],
+    privateFirms:[
+      {name:'Anduril Industries',meta:'$61B val · $2.2B rev · +100% YoY · Pre-IPO · HIGHEST CONVICTION'},
+      {name:'Starshield (SpaceX)',meta:'DOD variant of Starlink · classified programs'},
+      {name:'Shield AI',meta:'$5B val · autonomous fighter jet AI'},
+    ],
+    thesis:'The Ukraine war cemented space and satellite connectivity as warfighting infrastructure. SDA\'s Proliferated Warfighter Space Architecture (PWSA) is a $15B+ decade-long program. Anduril doubled revenue to $2.2B in 2025 and raised at $61B in May 2026 — the fastest-growing defense prime. L3Harris won a SDA Tranche 3 contract (Dec 2025 $3.5B program). Raytheon AEHF terminal contract extended to $2.97B. Geopolitical competition (China ASAT tests, Russia jamming) ensures this budget is permanent.',
+    bull:['SDA PWSA is a 10-year $15B+ program with bipartisan support','Anduril IPO at $61B+ would unlock a primary defense tech investment vehicle','China ASAT capability drives US space defense spending as existential priority'],
+    bear:['DOD budget cycles create revenue lumpiness — CR risk','Political uncertainty around defense priorities','Anduril is private — IPO timing uncertain'],
+    children:[
+      { id:'d-isr', name:'ISR & Space\nIntelligence', type:'downstream', risk:2, conviction:3,
+        tam:'$25B by 2030', supplyTension:'demand-led',
+        tickers:['PL','BKSY','MAXR'],
+        desc:'NRO contracts with SpaceX. Planet Labs, Capella Space, ICEYE providing persistent 24/7 multi-spectral coverage. AI-driven change detection transforming intelligence.',
+        publicFirms:[
+          {ticker:'PL',  name:'Planet Labs',rev:'$290M FY26',growth:'+20%',cap:'$1.5B',signal:'sig-buy',role:'Operates 200+ Dove cubesats providing daily global 3-5m imagery; 30%+ defense revenue and first profitable EO pure-play in FY2026'},
+          {ticker:'BKSY',name:'BlackSky Technology',rev:'$100M est.',growth:'+15%',cap:'$0.4B',signal:'sig-spec',role:'High-resolution sub-1m tasked imagery with 90-minute revisit for time-sensitive US government intelligence contracts'},
+          {ticker:'SPIR',name:'Spire Global',rev:'$130M',growth:'+18%',cap:'$0.4B',signal:'sig-spec',role:'Maritime AIS vessel tracking and GNSS radio-occultation weather data from its nanosatellite constellation'},
+        ],
+        privateFirms:[{name:'Capella Space (SAR)',meta:'Private · synthetic aperture radar'},{name:'ICEYE (Finland)',meta:'Private · SAR constellation · EU & DOD'}],
+        thesis:'Planet Labs reached its first profitable year in FY2026 with $900M backlog. 30%+ revenue from defense contracts. AI change-detection is the value multiplier — one satellite image analyzed by AI is worth 10x unprocessed imagery.',
+        bull:['Planet FY2026 profitability is a major inflection — first among commercial EO pure-plays'],
+        bear:['Commoditization as more EO operators enter market'],
+      },
+      { id:'d-tactical', name:'Tactical Edge\nStarshield', type:'downstream', risk:2, conviction:4,
+        tam:'$20B US DOD comms by 2030', supplyTension:'demand-led',
+        tickers:['PLTR','LHX','CACI'],
+        desc:'Starshield enables encrypted satellite comms for forward-deployed forces anywhere on earth. Ukraine demonstrated the capability. DOD is SpaceX\'s largest customer.',
+        publicFirms:[
+          {ticker:'PLTR',name:'Palantir (battlefield AI)',rev:'$4.5B',growth:'+56%',cap:'$300B+',signal:'sig-sb',role:'Gotham and Maven Smart System ingest Starshield imagery for real-time battlespace management and targeting decision support'},
+          {ticker:'LHX', name:'L3Harris (terminals)',rev:'$21B',growth:'+5%',cap:'$42B',signal:'sig-buy',role:'Manufactures tactical satellite terminals and encrypted radios connecting forward-deployed forces to the Starshield network'},
+          {ticker:'CACI',name:'CACI (defense IT/cyber)',rev:'$7.9B',growth:'+10%',cap:'$11B',signal:'sig-buy',role:'Provides Starshield integration services, cybersecurity hardening, and signals intelligence processing for classified DOD programs'},
+        ],
+        privateFirms:[{name:'Anduril',meta:'$61B · Lattice OS integrates Starshield data'},{name:'SpaceX Starshield',meta:'Classified DOD Starlink · largest customer'}],
+        thesis:'Palantir\'s Gotham platform and Anduril\'s Lattice OS both ingest Starshield data for battlespace management. This is the software layer on top of the Starshield hardware. PLTR + Anduril = the AI brain of the US military space network.',
+        bull:['Ukraine war = permanent uplift in allied demand for Starshield-equivalent systems','PLTR is already the DOD AI standard — revenue is recurring and growing'],
+        bear:['Classification of Starshield programs makes revenue forecasting difficult'],
+      },
+    ]
+  },
+
+  { id:'d-iot', name:'IoT & Smart\nInfrastructure', type:'downstream', risk:1, conviction:3,
+    tam:'$40B satellite IoT 2030', supplyTension:'demand-led',
+    tickers:['QCOM','IRDM','GSAT'],
+    desc:'Starlink D2C (direct-to-cell, T-Mobile partnership) enables satellite connectivity for any LTE device. Every sensor in remote oil fields, farms, and oceans can now connect.',
+    publicFirms:[
+      {ticker:'QCOM',name:'Qualcomm (NTN D2C modems)',rev:'$43B',growth:'+11%',cap:'$170B',signal:'sig-buy',role:'X75/X85 chipsets with NTN support enable Starlink D2C connectivity in any LTE handset — will ship in billions of future devices'},
+      {ticker:'IRDM',name:'Iridium Communications',rev:'$730M',growth:'+7%',cap:'$5B',signal:'sig-hold',role:'Operates the only true global L-band LEO network; provides satellite IoT messaging for maritime, aviation, and DOD assets Starlink can\'t reach'},
+      {ticker:'GSAT',name:'GlobalStar (Apple partnership)',rev:'$260M',growth:'+25%',cap:'$2B',signal:'sig-hold',role:'Apple SOS partnership ($4.4B deal) is the proof-of-concept for consumer satellite IoT revenue; expanding to Android ecosystem'},
+    ],
+    privateFirms:[{name:'Orbcomm',meta:'Private · industrial IoT messaging'},{name:'Astrocast',meta:'SIX: ASTC · nanosat IoT'}],
+    thesis:'Qualcomm\'s X75/X85 chipsets include NTN (non-terrestrial network) support — enabling Starlink D2C in any LTE handset without hardware changes. GlobalStar\'s Apple partnership ($4.4B deal) is the proof-of-concept for satellite IoT revenue. IRDM has a durable maritime/aviation base with military contracts and steady cash flows.',
+    bull:['QCOM NTN modem will be in billions of future LTE devices — satellite IoT becomes default','GlobalStar Apple partnership proves consumer willingness to pay for satellite safety features'],
+    bear:['5G standalone will cover most high-value IoT use cases before satellite scales','Satellite IoT bandwidth constraints limit data-heavy applications'],
+    children:[
+      { id:'d-agri', name:'Precision Agriculture\n& Smart Farming', type:'downstream', risk:1, conviction:3,
+        tam:'$15B precision ag IoT 2030', supplyTension:'demand-led',
+        tickers:['DE','CNHI','AGCO'],
+        desc:'Starlink-connected autonomous tractors (John Deere AutoTrac), soil sensors, and drone fleets. Remote work and real-time crop monitoring enabled globally.',
+        publicFirms:[
+          {ticker:'DE',  name:'John Deere (AutoTrac autonomous)',rev:'$56B',growth:'-9% (cycle)',cap:'$120B',signal:'sig-buy',role:'AutoTrac precision autonomous planting requires persistent satellite connectivity; Starlink enables rural coverage where cellular fails'},
+          {ticker:'CNHI',name:'CNH Industrial (precision ag)',rev:'$20B',growth:'-5%',cap:'$15B',signal:'sig-hold',role:'Precision guidance across Case IH and New Holland brands; satellite connectivity enables autonomous field management in remote markets'},
+          {ticker:'AGCO',name:'AGCO Corporation',rev:'$11B',growth:'-12%',cap:'$4.5B',signal:'sig-hold',role:'Fuse Technology platform for connected field management; emerging market agriculture benefits most from Starlink coverage expansion'},
+        ],
+        privateFirms:[{name:'Trimble Agriculture',meta:'NASDAQ: TRMB · GPS/precision ag'},{name:'Farmers Edge',meta:'TSX: FDGE · AI precision ag platform'}],
+        thesis:'John Deere is the clearest precision agriculture + Starlink connectivity play. AutoTrac autonomous planting requires persistent connectivity. Current ag equipment cycle is down — creates an attractive entry for a long-term Starlink-enabled automation thesis.',
+        bull:['Ag equipment cycle down → entry opportunity; Starlink connectivity drives upgrade to autonomous models'],
+        bear:['Current ag equipment downcycle is severe (-9% to -12% revenue growth)'],
+      },
+      { id:'d-energy', name:'Energy Grid &\nRemote Monitoring', type:'downstream', risk:1, conviction:2,
+        tam:'$12B IoT energy 2030', supplyTension:'demand-led',
+        tickers:['SLB','HAL','GEV'],
+        desc:'Remote oil/gas pipeline monitoring, offshore wind management, smart grid sensors in areas beyond cellular coverage — all enabled by Starlink.',
+        publicFirms:[
+          {ticker:'SLB', name:'SLB (Schlumberger)',rev:'$36B',growth:'+5%',cap:'$55B',signal:'sig-hold',role:'Deploys downhole sensors and remote monitoring in oil fields; Starlink provides the satellite backhaul for real-time field data beyond cellular range'},
+          {ticker:'HAL', name:'Halliburton',rev:'$23B',growth:'+3%',cap:'$23B',signal:'sig-hold',role:'Real-time drilling optimization using satellite-connected sensors at remote wellsites where terrestrial comms are unavailable'},
+          {ticker:'GEV', name:'GE Vernova (grid tech)',rev:'$35B',growth:'+20%',cap:'$70B',signal:'sig-buy',role:'Offshore wind turbine management requires satellite connectivity for remote operations; GEV is growing 20%+ with record backlog'},
+        ],
+        privateFirms:[{name:'ABB',meta:'NYSE: ABB · grid automation'},{name:'Siemens Energy',meta:'DE: ENR · offshore wind connectivity'}],
+        thesis:'GE Vernova is the strongest play — offshore wind grid management requires satellite connectivity and GEV is growing at 20%+ with massive backlog. SLB and HAL benefit from Starlink-enabled remote field monitoring but it\'s a small part of their story.',
+        bull:['Offshore wind buildout requires satellite connectivity for remote turbine monitoring'],
+        bear:['Starlink is an enabler, not the primary driver of energy sector investment thesis'],
+      },
+    ]
+  },
+
+  { id:'d-earthobs', name:'Earth Observation\n& Geospatial', type:'downstream', risk:1, conviction:3,
+    tam:'$7B → $14.5B by 2034', supplyTension:'demand-led',
+    tickers:['PL','BKSY','SPIR'],
+    desc:'Commercial EO market doubling by 2034. Planet Labs first profitable year FY2026 with $900M backlog. Starship dramatically reduces cost of deploying new satellites.',
+    publicFirms:[
+      {ticker:'PL',  name:'Planet Labs (Dove/Pelican)',rev:'$290M FY26',growth:'+20%',cap:'$1.5B',signal:'sig-buy',role:'200+ daily-revisit satellites provide the raw geospatial data layer; Starship dramatically reduces the cost of deploying next-gen Pelican birds'},
+      {ticker:'BKSY',name:'BlackSky Technology',rev:'$100M est.',growth:'+15%',cap:'$0.4B',signal:'sig-spec',role:'High-revisit tasked imagery combined with AI-driven change detection for defense and critical infrastructure monitoring'},
+      {ticker:'SPIR',name:'Spire Global (maritime/weather)',rev:'$130M',growth:'+18%',cap:'$0.4B',signal:'sig-spec',role:'AIS vessel tracking and GNSS-RO weather data from cubesat constellation; data-as-a-service model with recurring subscription revenue'},
+    ],
+    privateFirms:[
+      {name:'Vantor (formerly Maxar)',meta:'Private since 2023 · DigitalGlobe heritage · 21% market share'},
+      {name:'Capella Space (SAR)',meta:'Private · all-weather day/night radar'},
+      {name:'ICEYE (Finland)',meta:'Private · SAR constellation · EU + DOD'},
+    ],
+    thesis:'Planet Labs achieved first profitable year in FY2026, with $900M backlog (3x revenue coverage) and 98% recurring contract value. Starship enabling lower-cost next-generation high-resolution constellations. AI-driven analytics (change detection, ship-AIS fusion, crop yield modeling) is the real value multiplier turning imagery into intelligence.',
+    bull:['PL FY2026 profitability inflection — first commercial EO pure-play to break even','$900M backlog with 98% recurring revenue = high visibility','Defense contracts (30%+ of revenue) provide stable base'],
+    bear:['Commoditization risk as Chinese EO satellites offer lower-cost data','Small float and market cap limit institutional participation'],
+    children:[
+      { id:'d-geoint', name:'Geospatial AI\n& Analytics', type:'downstream', risk:1, conviction:4,
+        tam:'$20B geospatial analytics 2030', supplyTension:'demand-led',
+        tickers:['PLTR','ESRI','MSFT'],
+        desc:'AI analysis of satellite imagery for hedge funds (crop yields, parking lots), government intelligence, and urban planning. Growing to $300B+ TAM long-term.',
+        publicFirms:[
+          {ticker:'PLTR',name:'Palantir (Gotham geoint)',rev:'$4.5B',growth:'+56%',cap:'$300B+',signal:'sig-sb',role:'Gotham platform is the primary US government geospatial intelligence tool, fusing satellite imagery with classified data for targeting and analysis'},
+          {ticker:'MSFT',name:'Microsoft (Azure Maps/AI)',rev:'$245B',growth:'+13%',cap:'$3.1T',signal:'sig-buy',role:'Azure AI and Planetary Computer platform enable large-scale geospatial analytics including crop yield modeling and infrastructure change detection'},
+        ],
+        privateFirms:[{name:'Orbital Insight',meta:'Private · commercial geospatial AI'},{name:'SpaceKnow',meta:'Private · satellite economic analytics'}],
+        thesis:'Palantir\'s Gotham platform is the primary US government geospatial intelligence tool. The commercial analytics market (hedge funds using crop yields, ship counts, parking lot density) is a high-growth vertical that PLTR is expanding into.',
+        bull:['Every hedge fund and government agency needs persistent Earth monitoring','AI makes imagery 10x more valuable — PLTR captures the analytics margin'],
+        bear:['Valuation is extreme — priced for decades of perfect execution'],
+      },
+    ]
+  },
+
+  { id:'d-space2space', name:'Deep Space &\nLunar Economy', type:'downstream', risk:3, conviction:2,
+    tam:'$1T+ (20-30yr horizon)', supplyTension:'demand-led',
+    tickers:['LUNR','RKLB','BWXT'],
+    desc:'Starship = NASA Human Landing System for Artemis. Intuitive Machines completed 2 lunar missions. Long-dated but potentially transformative. Speculative for most investors.',
+    publicFirms:[
+      {ticker:'LUNR',name:'Intuitive Machines (CLPS)',rev:'$240M est.',growth:'+60%',cap:'$1.2B',signal:'sig-spec',role:'Only public company with completed commercial lunar landings; two CLPS missions flown under NASA contract with growing backlog'},
+      {ticker:'RKLB',name:'Rocket Lab (CLPS-capable)',rev:'$602M',growth:'+38%',cap:'~$20B',signal:'sig-buy',role:'CAPSTONE lunar mission success demonstrates deep-space trajectory capability; positioned for CLPS and cislunar transport contracts'},
+      {ticker:'BWXT',name:'BWX Technologies (nuclear prop)',rev:'$2.8B',growth:'+10%',cap:'$8B',signal:'sig-hold',role:'Developing nuclear thermal rocket propulsion under DRACO program; NTP could cut Mars transit from 7 months to ~4 months'},
+    ],
+    privateFirms:[
+      {name:'Blue Origin (Blue Moon)',meta:'Private · Bezos · lunar lander competitor'},
+      {name:'Astrobotic',meta:'Private · CLPS program · Pittsburgh'},
+      {name:'AstroForge',meta:'Private · asteroid mining · Series A'},
+      {name:'ispace (Japan)',meta:'TSE: 9348 · lunar lander · 2 missions flown'},
+    ],
+    thesis:'Artemis program commits the US government to $93B+ in lunar spending through 2040. Starship as HLS (Human Landing System) is confirmed. LUNR has already flown 2 CLPS missions and has a growing backlog. RKLB is CLPS-capable and winning government contracts for deep space missions. BWX Technologies is developing nuclear thermal propulsion for fast deep-space transit. Highly speculative — 10+ year horizon.',
+    bull:['Artemis + $93B government commitment creates guaranteed demand','Lunar ice water = propellant depot = self-sustaining cislunar economy by 2040','LUNR +60% revenue growth and completing real lunar missions — this is not science fiction'],
+    bear:['10-25 year investment horizon is too long for most institutional investors','Program cancellation/delay risk (see Constellation program cancellation precedent)','Asteroid mining economics remain speculative'],
+    children:[]
+  },
+
+  ] // end children
+}; // end DATA
+
+// ── LAYOUT ───────────────────────────────────────────────────────────────────
+const canvasEl = document.getElementById('canvas');
+const W = canvasEl.clientWidth, H = canvasEl.clientHeight;
+const CX = W/2, CY = H/2;
+
+const svg = d3.select('#mindmap').attr('width', W).attr('height', H);
+const g   = svg.append('g');
+
+function initCollapse(node, depth) {
+  node._depth     = depth;
+  node._collapsed = depth >= 1;
+  node._filtered  = false;          // true = hidden from graph entirely
+  if (node.children) node.children.forEach(c => initCollapse(c, depth+1));
+}
+initCollapse(DATA, 0);
+DATA._collapsed = false;
+
+function computeLayout(root) {
+  const nodes = [], links = [];
+  function traverse(node, parent, depth, a0, a1) {
+    if (node._filtered) return;     // skip this node AND its entire subtree
+    const angle = (a0+a1)/2;
+    const rr = [0, 210, 390, 540][Math.min(depth, 3)];
+    node._x     = CX + rr * Math.cos(angle - Math.PI/2);
+    node._y     = CY + rr * Math.sin(angle - Math.PI/2);
+    node._angle = angle;
+    node._depth = depth;
+    nodes.push(node);
+    if (parent) links.push({source:parent, target:node});
+    if (node.children && node.children.length && !node._collapsed) {
+      const step = (a1-a0)/node.children.length;
+      node.children.forEach((c,i) => traverse(c, node, depth+1, a0+i*step, a0+(i+1)*step));
+    }
+  }
+  traverse(root, null, 0, 0, 2*Math.PI);
+  return {nodes, links};
+}
+
+// ── COLORS ───────────────────────────────────────────────────────────────────
+const riskColor = r => (['#3b82f6','#10b981','#22c55e','#eab308','#f97316','#ef4444'])[Math.min(r,5)];
+const tensionColor = t => ({critical:'#ef4444',high:'#f97316',medium:'#eab308','demand-led':'#22c55e',hub:'#3b82f6'})[t]||'#3b82f6';
+const linkColor   = node => node.type==='upstream'?'#3b82f6':'#22c55e';
+const nodeR       = d => ([60,50,30,20])[Math.min(d,3)];
+const starsStr    = n => '★'.repeat(n)+'☆'.repeat(5-n);
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render() {
+  const {nodes, links} = computeLayout(DATA);
+
+  // ── defs
+  let defs = svg.select('defs');
+  if (defs.empty()) defs = svg.append('defs');
+  if (defs.select('#glow').empty()) {
+    const f = defs.append('filter').attr('id','glow');
+    f.append('feGaussianBlur').attr('stdDeviation','3').attr('result','coloredBlur');
+    const m = f.append('feMerge');
+    m.append('feMergeNode').attr('in','coloredBlur');
+    m.append('feMergeNode').attr('in','SourceGraphic');
+  }
+
+  // ── links
+  g.selectAll('.link').remove();
+  g.selectAll('.link').data(links).enter().append('path')
+    .attr('class','link')
+    .attr('d', d=>{
+      const sx=d.source._x, sy=d.source._y, tx=d.target._x, ty=d.target._y;
+      const mx=(sx+tx)/2, my=(sy+ty)/2;
+      return 'M'+sx+','+sy+' Q'+(CX+(mx-CX)*0.3)+','+(CY+(my-CY)*0.3)+' '+tx+','+ty;
+    })
+    .attr('stroke', d=>linkColor(d.target))
+    .attr('stroke-width', d=>Math.max(1, 3-d.target._depth*0.8))
+    .attr('stroke-opacity', d=>0.3+d.target._depth*0.05)
+    .attr('stroke-dasharray', d=>d.target._depth>=2?'4,3':'none');
+
+  // ── nodes
+  g.selectAll('.node').remove();
+  const nodeG = g.selectAll('.node').data(nodes).enter().append('g')
+    .attr('class','node')
+    .attr('transform', d=>'translate('+d._x+','+d._y+')')
+    .style('cursor', d=>(d.children&&d.children.length)?'pointer':'default')
+    .on('click', (ev,d) => {
+      ev.stopPropagation();
+      if (d.children && d.children.length) { d._collapsed = !d._collapsed; render(); }
+      openPanel(d);
+    })
+    .on('mouseover', (ev,d) => openPanel(d));
+
+  // pulsing outer ring for critical supply tension
+  nodeG.filter(d=>d.supplyTension==='critical')
+    .append('circle')
+    .attr('class','pulse-ring')
+    .attr('r', d=>nodeR(d._depth)+9)
+    .attr('fill','none')
+    .attr('stroke', d=>tensionColor(d.supplyTension))
+    .attr('stroke-width',2)
+    .attr('stroke-opacity',0.5);
+
+  // tension ring (all nodes)
+  nodeG.filter(d=>d._depth>0)
+    .append('circle')
+    .attr('r', d=>nodeR(d._depth)+4)
+    .attr('fill','none')
+    .attr('stroke', d=>tensionColor(d.supplyTension||'hub'))
+    .attr('stroke-width',1.5)
+    .attr('stroke-opacity',0.35);
+
+  // main circle
+  nodeG.append('circle')
+    .attr('r', d=>nodeR(d._depth))
+    .attr('fill', d=>(riskColor(d.risk))+'26')
+    .attr('stroke', d=>riskColor(d.risk))
+    .attr('stroke-width', d=>d._depth===0?3:2)
+    .attr('filter', d=>d.risk>=4?'url(#glow)':null);
+
+  // expand dot
+  nodeG.filter(d=>d.children&&d.children.length&&d._depth>0)
+    .append('circle')
+    .attr('cx', d=>nodeR(d._depth)-5).attr('cy', d=>-(nodeR(d._depth)-5))
+    .attr('r',5).attr('fill',d=>d._collapsed?'#22c55e':'#ef4444')
+    .attr('stroke','#f0f4f8').attr('stroke-width',1.5);
+  nodeG.filter(d=>d.children&&d.children.length&&d._depth>0)
+    .append('text')
+    .attr('x', d=>nodeR(d._depth)-5).attr('y', d=>-(nodeR(d._depth)-5))
+    .attr('text-anchor','middle').attr('dominant-baseline','central')
+    .attr('fill','#fff').attr('font-size','8px').attr('font-weight','700')
+    .attr('pointer-events','none')
+    .text(d=>d._collapsed?'+':'-');
+
+  // node labels (name lines)
+  nodeG.each(function(d) {
+    const el = d3.select(this);
+    const lines = d.name.split('\n');
+    const fs = d._depth===0?13:d._depth===1?12:10.5;
+    const isLeft  = d._x < CX-15;
+    const isRight = d._x > CX+15;
+    const isTop   = d._y < CY-15;
+    const isBot   = d._y > CY+15;
+    const anchor  = d._depth===0?'middle':(isLeft?'end':'start');
+    const xOff    = d._depth===0?0:(isLeft?-(nodeR(d._depth)+6):(isRight?nodeR(d._depth)+6:0));
+    const r = nodeR(d._depth);
+    let yBase;
+    if (d._depth===0) yBase = -(lines.length-1)*(fs+2)/2;
+    else if (isBot)   yBase = r+10;
+    else if (isTop)   yBase = -(r+10+(lines.length-1)*(fs+3));
+    else              yBase = -(lines.length-1)*(fs+2)/2;
+
+    lines.forEach((line,i) => {
+      el.append('text')
+        .attr('x', xOff).attr('y', yBase + i*(fs+3))
+        .attr('text-anchor', d._depth===0?'middle':anchor)
+        .attr('dominant-baseline','hanging')
+        .attr('fill', d._depth<=1?'#1e293b':'#475569').attr('font-size',fs+'px')
+        .attr('font-weight', d._depth===0?'700':d._depth===1?'600':'500')
+        .text(line);
+    });
+
+    // conviction stars (depth 1)
+    if (d._depth===1 && d.conviction) {
+      const sy = isBot ? r+10+lines.length*(fs+3) : isTop ? -(r+22+lines.length*(fs+3)) : r+14;
+      el.append('text')
+        .attr('x',xOff).attr('y',sy)
+        .attr('text-anchor',anchor)
+        .attr('dominant-baseline','hanging')
+        .attr('fill','#f59e0b').attr('font-size','11px')
+        .attr('pointer-events','none')
+        .text(starsStr(d.conviction));
+    }
+
+    // TAM label (depth 1)
+    if (d._depth===1 && d.tam && d.tam!=='N/A — risk factor') {
+      const ty2 = isBot ? r+10+lines.length*(fs+3)+15 : isTop ? -(r+36+lines.length*(fs+3)) : r+28;
+      el.append('text')
+        .attr('x',xOff).attr('y',ty2)
+        .attr('text-anchor',anchor)
+        .attr('dominant-baseline','hanging')
+        .attr('fill','#64748b').attr('font-size','9.5px')
+        .attr('pointer-events','none')
+        .text(d.tam);
+    }
+
+    // ticker chips (depth 1, show 2)
+    if (d._depth===1 && d.tickers && d.tickers.length) {
+      const chips = d.tickers.slice(0,2);
+      const chipW = 36, chipH = 16, gap = 5;
+      const totalW = chips.length*(chipW+gap)-gap;
+      const cx2 = d._depth===0?0:(isLeft?xOff-totalW/2:isRight?xOff+totalW/2:0);
+      const cy2 = isBot ? r+10+lines.length*(fs+3)+26 : isTop ? -(r+48+lines.length*(fs+3)) : r+40;
+      chips.forEach((tk,ii) => {
+        const tx2 = cx2 + ii*(chipW+gap) - totalW/2;
+        const chipG = el.append('g').attr('pointer-events','none');
+        chipG.append('rect')
+          .attr('x',tx2).attr('y',cy2)
+          .attr('width',chipW).attr('height',chipH)
+          .attr('rx',4).attr('fill','#eff6ff').attr('stroke','#93c5fd').attr('stroke-width',1);
+        chipG.append('text')
+          .attr('x',tx2+chipW/2).attr('y',cy2+chipH/2)
+          .attr('text-anchor','middle').attr('dominant-baseline','central')
+          .attr('fill','#1d4ed8').attr('font-size','9.5px').attr('font-weight','700')
+          .text(tk);
+      });
+    }
+
+    // ticker chips (depth 2, show 1)
+    if (d._depth===2 && d.tickers && d.tickers.length) {
+      const tk = d.tickers[0];
+      const chipW = 34, chipH = 14;
+      const cy2 = isBot ? nodeR(2)+10+lines.length*(10.5+3)+6 : isTop ? -(nodeR(2)+26+lines.length*(10.5+3)) : nodeR(2)+20;
+      const tx2 = xOff - chipW/2;
+      const chipG = el.append('g').attr('pointer-events','none');
+      chipG.append('rect')
+        .attr('x',tx2).attr('y',cy2)
+        .attr('width',chipW).attr('height',chipH)
+        .attr('rx',4).attr('fill','#eff6ff').attr('stroke','#93c5fd').attr('stroke-width',1);
+      chipG.append('text')
+        .attr('x',tx2+chipW/2).attr('y',cy2+chipH/2)
+        .attr('text-anchor','middle').attr('dominant-baseline','central')
+        .attr('fill','#1d4ed8').attr('font-size','9px').attr('font-weight','700')
+        .text(tk);
+    }
+
+    // risk badge in root
+    if (d._depth===0) {
+      el.append('text').attr('x',0).attr('y',26)
+        .attr('text-anchor','middle').attr('dominant-baseline','central')
+        .attr('fill','#94a3b8').attr('font-size','10px').attr('font-weight','500')
+        .attr('pointer-events','none').text('Click nodes to explore');
+    }
+  });
+}
+
+// ── INVESTMENT PANEL ─────────────────────────────────────────────────────────
+function signalLabel(s) {
+  return ({
+    'sig-sb':   '<span class="signal sig-sb">STRONG BUY</span>',
+    'sig-buy':  '<span class="signal sig-buy">BUY</span>',
+    'sig-hold': '<span class="signal sig-hold">HOLD</span>',
+    'sig-cau':  '<span class="signal sig-cau">CAUTIOUS</span>',
+    'sig-avd':  '<span class="signal sig-avd">AVOID</span>',
+    'sig-spec': '<span class="signal sig-spec">SPECULATIVE</span>',
+  })[s]||'';
+}
+
+function tensionTag(t) {
+  const map = {
+    critical:    ['t-critical','⚡ CRITICAL'],
+    high:        ['t-high','⚠ HIGH'],
+    medium:      ['t-medium','↔ MEDIUM'],
+    'demand-led':['t-demand','📈 DEMAND-LED'],
+    hub:         ['t-demand','— HUB'],
+  };
+  const [cls,label] = map[t]||['t-demand','—'];
+  return '<span class="tension-tag '+cls+'">'+label+'</span>';
+}
+
+function typeTag(t) {
+  if (t==='upstream')   return '<span class="type-tag tag-up">⬆ UPSTREAM</span>';
+  if (t==='downstream') return '<span class="type-tag tag-down">⬇ DOWNSTREAM</span>';
+  return '<span class="type-tag tag-hub">◉ HUB</span>';
+}
+
+// Build the inner HTML content (shared by sidebar and overlay)
+function buildPanelContent(d) {
+  const pf = (d.publicFirms||[]).map(f=>{
+    const gCls = f.growth.startsWith('-')?'growth-neg':f.growth.startsWith('+')?'growth-pos':'growth-neu';
+    return '<tr>'
+      +'<td class="ticker-cell">'+f.ticker+'</td>'
+      +'<td><div class="firm-name-cell">'+f.name+'</div>'+(f.role?'<div class="firm-role">'+f.role+'</div>':'')+'</td>'
+      +'<td>'+f.rev+'</td>'
+      +'<td class="'+gCls+'">'+f.growth+'</td>'
+      +'<td>'+signalLabel(f.signal)+'</td>'
+      +'</tr>';
+  }).join('');
+
+  const pvf = (d.privateFirms||[]).map(p=>
+    '<div class="private-item"><div class="private-name">'+(p.name||p)+'</div>'
+    +(p.meta?'<div class="private-meta">'+p.meta+'</div>':'')+'</div>'
+  ).join('');
+
+  const bull = (d.bull||[]).map(b=>'<li>'+b+'</li>').join('');
+  const bear = (d.bear||[]).map(b=>'<li>'+b+'</li>').join('');
+
+  return (pf
+    ? '<div class="section-title">Public Investment Plays</div>'
+      +'<table class="firms-table"><tr><th>Ticker</th><th>Company &amp; Role</th><th>Revenue</th><th>Growth</th><th>Signal</th></tr>'
+      +pf+'</table>'
+    : '')
+    +(pvf
+      ? '<div class="section-title">Private / IPO Watch</div>'+pvf
+      : '')
+    +'<div class="section-title">Investment Thesis</div>'
+    +'<p class="thesis-text">'+d.thesis+'</p>'
+    +(bull||bear
+      ? '<div class="section-title">Bull vs Bear</div>'
+        +'<div class="bull-bear">'
+        +(bull?'<div class="bb-box bb-bull"><div class="bb-title">🟢 BULL</div><ul>'+bull+'</ul></div>':'')
+        +(bear?'<div class="bb-box bb-bear"><div class="bb-title">🔴 BEAR</div><ul>'+bear+'</ul></div>':'')
+        +'</div>'
+      : '');
+}
+
+// Current node being displayed (so expand button can reference it)
+let _currentNode = null;
+
+function openPanel(d) {
+  _currentNode = d;
+
+  // Show panel, hide placeholder
+  document.getElementById('panel-placeholder').style.display = 'none';
+  const pc = document.getElementById('panel-content');
+  pc.style.display = 'flex';
+
+  // ── Top section
+  const panelTop = document.getElementById('panel-top') || (() => {
+    const el = document.createElement('div');
+    el.id = 'panel-top';
+    pc.prepend(el);
+    return el;
+  })();
+
+  panelTop.innerHTML =
+    '<button id="expand-btn" title="Fullscreen view">⤢</button>'
+    +'<div class="panel-name">'+d.name.replace('\n',' ')+'</div>'
+    +'<div class="panel-badges">'
+      +typeTag(d.type)
+      +(d.conviction?'<span style="color:#f59e0b;font-size:13px;">'+starsStr(d.conviction)+'</span>':'')
+    +'</div>'
+    +'<div class="metrics-grid">'
+      +'<div class="metric-box"><div class="metric-label">Market Opp.</div><div class="metric-value">'+d.tam+'</div></div>'
+      +'<div class="metric-box"><div class="metric-label">Supply Tension</div><div class="metric-value">'+tensionTag(d.supplyTension)+'</div></div>'
+    +'</div>';
+
+  // ── Scrollable body
+  let ps = document.getElementById('panel-scroll');
+  if (!ps) {
+    ps = document.createElement('div');
+    ps.id = 'panel-scroll';
+    pc.appendChild(ps);
+  }
+  ps.innerHTML = buildPanelContent(d);
+
+  // Wire expand button
+  document.getElementById('expand-btn').onclick = openOverlay;
+}
+
+// ── FULLSCREEN OVERLAY ────────────────────────────────────────────────────────
+function openOverlay() {
+  const d = _currentNode;
+  if (!d) return;
+
+  document.getElementById('ov-name').textContent   = d.name.replace('\n',' ');
+  document.getElementById('ov-badges').innerHTML   =
+    typeTag(d.type)
+    +(d.conviction?'<span style="color:#f59e0b;font-size:15px;margin-left:4px;">'+starsStr(d.conviction)+'</span>':'')
+    +tensionTag(d.supplyTension||'hub');
+
+  document.getElementById('overlay-metrics').innerHTML =
+    '<div class="metric-box"><div class="metric-label">Market Opportunity</div><div class="metric-value">'+d.tam+'</div></div>'
+    +'<div class="metric-box"><div class="metric-label">Supply Tension</div><div class="metric-value">'+tensionTag(d.supplyTension||'hub')+'</div></div>'
+    +(d.conviction
+      ? '<div class="metric-box"><div class="metric-label">Conviction</div><div class="metric-value" style="color:#f59e0b;">'+starsStr(d.conviction)+' '+d.conviction+'/5</div></div>'
+      : '');
+
+  // Overlay gets a wider firms table (add Market Cap column)
+  const pf = (d.publicFirms||[]).map(f=>{
+    const gCls = f.growth.startsWith('-')?'growth-neg':f.growth.startsWith('+')?'growth-pos':'growth-neu';
+    return '<tr>'
+      +'<td class="ticker-cell">'+f.ticker+'</td>'
+      +'<td><div class="firm-name-cell">'+f.name+'</div>'+(f.role?'<div class="firm-role">'+f.role+'</div>':'')+'</td>'
+      +'<td>'+f.rev+'</td>'
+      +'<td class="'+gCls+'">'+f.growth+'</td>'
+      +'<td>'+(f.cap||'—')+'</td>'
+      +'<td>'+signalLabel(f.signal)+'</td>'
+      +'</tr>';
+  }).join('');
+
+  const pvf = (d.privateFirms||[]).map(p=>
+    '<div class="private-item"><div class="private-name">'+(p.name||p)+'</div>'
+    +(p.meta?'<div class="private-meta">'+p.meta+'</div>':'')+'</div>'
+  ).join('');
+
+  const bull = (d.bull||[]).map(b=>'<li>'+b+'</li>').join('');
+  const bear = (d.bear||[]).map(b=>'<li>'+b+'</li>').join('');
+
+  document.getElementById('overlay-scroll').innerHTML =
+    (pf
+      ? '<div class="section-title">Public Investment Plays</div>'
+        +'<table class="firms-table"><tr><th>Ticker</th><th>Company &amp; Role in Sector</th><th>Revenue</th><th>Growth</th><th>Market Cap</th><th>Signal</th></tr>'
+        +pf+'</table>'
+      : '')
+    +(pvf
+      ? '<div class="section-title">Private / IPO Watch</div><div class="private-grid">'+pvf+'</div>'
+      : '')
+    +'<div class="section-title">Investment Thesis</div>'
+    +'<p class="thesis-text" style="font-size:13.5px;line-height:1.8;">'+d.thesis+'</p>'
+    +(bull||bear
+      ? '<div class="section-title">Bull vs Bear</div>'
+        +'<div class="bull-bear">'
+        +(bull?'<div class="bb-box bb-bull"><div class="bb-title">🟢 BULL CASE</div><ul>'+bull+'</ul></div>':'')
+        +(bear?'<div class="bb-box bb-bear"><div class="bb-title">🔴 BEAR CASE</div><ul>'+bear+'</ul></div>':'')
+        +'</div>'
+      : '');
+
+  document.getElementById('panel-overlay').classList.add('open');
+}
+
+// Close overlay on backdrop click or close button
+document.getElementById('panel-overlay').addEventListener('click', e=>{
+  if (e.target === document.getElementById('panel-overlay'))
+    document.getElementById('panel-overlay').classList.remove('open');
+});
+document.getElementById('close-overlay').addEventListener('click', ()=>{
+  document.getElementById('panel-overlay').classList.remove('open');
+});
+// Close with Escape key
+document.addEventListener('keydown', e=>{
+  if (e.key==='Escape') document.getElementById('panel-overlay').classList.remove('open');
+});
+
+// ── ZOOM & CONTROLS ──────────────────────────────────────────────────────────
+const zoom = d3.zoom().scaleExtent([0.25,4]).on('zoom', e=>g.attr('transform',e.transform));
+svg.call(zoom);
+document.getElementById('zi').onclick = ()=>svg.transition().call(zoom.scaleBy,1.4);
+document.getElementById('zo').onclick = ()=>svg.transition().call(zoom.scaleBy,0.7);
+document.getElementById('zr').onclick = ()=>svg.transition().call(zoom.transform,d3.zoomIdentity);
+
+// ── FILTER BUTTONS ────────────────────────────────────────────────────────────
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.onclick = function() {
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    this.classList.add('active');
+    const f = this.dataset.filter;
+    function applyFilter(node) {
+      // Root is always visible and expanded
+      if (node._depth === 0) {
+        node._filtered  = false;
+        node._collapsed = false;
+        if (node.children) node.children.forEach(applyFilter);
+        return;
+      }
+
+      // Depth-1 sectors: decide visibility based on filter
+      if (node._depth === 1) {
+        if (f === 'all') {
+          node._filtered  = false;
+          node._collapsed = true;   // show sectors collapsed by default
+        } else if (f === 'upstream') {
+          node._filtered  = (node.type === 'downstream');
+          node._collapsed = true;
+        } else if (f === 'downstream') {
+          node._filtered  = (node.type === 'upstream');
+          node._collapsed = true;
+        } else if (f === 'critical') {
+          node._filtered  = (node.supplyTension !== 'critical');
+          node._collapsed = false;  // auto-expand matching sectors
+        } else if (f === 'conviction5') {
+          node._filtered  = ((node.conviction || 0) < 5);
+          node._collapsed = false;  // auto-expand matching sectors
+        }
+      } else {
+        // Depth 2+ nodes: always show if parent wasn't filtered
+        // (parent's _filtered=true already stops traversal, so we only
+        //  reach here for children of visible parents)
+        node._filtered  = false;
+        node._collapsed = (node._depth >= 3);
+      }
+
+      if (node.children) node.children.forEach(applyFilter);
+    }
+    applyFilter(DATA);
+    render();
+  };
+});
+
+// ── RESIZE ────────────────────────────────────────────────────────────────────
+window.addEventListener('resize', ()=>{
+  const nW = canvasEl.clientWidth, nH = canvasEl.clientHeight;
+  svg.attr('width',nW).attr('height',nH);
+});
+
+// ── INITIAL RENDER ────────────────────────────────────────────────────────────
+render();
+svg.call(zoom.transform, d3.zoomIdentity.scale(0.82));
+setTimeout(()=>svg.transition().duration(900).call(zoom.transform,d3.zoomIdentity),120);
+</script>
+</body>
+</html>
+

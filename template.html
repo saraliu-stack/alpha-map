@@ -1,0 +1,847 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Economy — Investment Guide</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#f0f4f8; font-family:'Segoe UI',system-ui,Arial,sans-serif; overflow:hidden; color:#1e2d3d; }
+
+/* ── HEADER ── */
+#header {
+  position:fixed; top:0; left:0; right:0; z-index:200; height:64px;
+  background:#ffffff;
+  border-bottom:2px solid #e2e8f0;
+  box-shadow:0 2px 12px rgba(0,40,100,0.08);
+  padding:0 24px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+#header h1 { font-size:18px; font-weight:700; color:#1a2d4a; letter-spacing:0.2px; }
+#header p  { font-size:12px; color:#64748b; margin-top:3px; }
+.starlink-badge {
+  background:linear-gradient(135deg,#1d4ed8,#2563eb);
+  border-radius:8px;
+  padding:7px 14px; font-size:12px; color:#ffffff; font-weight:600;
+  box-shadow:0 2px 10px rgba(37,99,235,0.3);
+  white-space:nowrap;
+}
+
+/* ── LEFT PANEL ── */
+#left-panel {
+  position:fixed; top:64px; left:0; bottom:0; width:220px; z-index:100;
+  background:#ffffff;
+  border-right:1px solid #e2e8f0;
+  box-shadow:2px 0 8px rgba(0,0,0,0.04);
+  display:flex; flex-direction:column; padding:18px 14px;
+  overflow-y:auto;
+}
+#left-panel h3 {
+  font-size:10px; text-transform:uppercase; letter-spacing:1.5px;
+  color:#94a3b8; margin-bottom:10px; margin-top:4px;
+  padding-bottom:6px; border-bottom:1px solid #f1f5f9;
+}
+.filter-btn {
+  display:block; width:100%; text-align:left; padding:8px 10px;
+  border-radius:8px; border:none; background:transparent;
+  color:#64748b; font-size:13px; cursor:pointer; margin-bottom:3px;
+  transition:all 0.18s; font-family:inherit;
+}
+.filter-btn:hover { background:#f1f5f9; color:#1e40af; padding-left:14px; }
+.filter-btn.active {
+  background:linear-gradient(90deg,#eff6ff,#f8faff);
+  color:#1d4ed8; border-left:3px solid #2563eb; padding-left:11px; font-weight:600;
+}
+
+.legend-section { margin-top:18px; }
+.legend-item { display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:12px; color:#64748b; }
+.leg-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.leg-line { width:20px; height:3px; border-radius:2px; flex-shrink:0; }
+
+/* ── RIGHT PANEL ── */
+#right-panel {
+  position:fixed; top:64px; right:0; bottom:0; width:340px; z-index:100;
+  background:#ffffff;
+  border-left:1px solid #e2e8f0;
+  box-shadow:-2px 0 8px rgba(0,0,0,0.04);
+  display:flex; flex-direction:column; overflow:hidden;
+  transition:width 0.28s cubic-bezier(.4,0,.2,1);
+}
+#panel-placeholder {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  height:100%; text-align:center; padding:28px;
+}
+#panel-placeholder .ph-icon { font-size:44px; margin-bottom:14px; opacity:0.35; }
+#panel-placeholder .ph-title { font-size:15px; font-weight:600; color:#94a3b8; margin-bottom:8px; }
+#panel-placeholder p { font-size:12.5px; line-height:1.7; color:#cbd5e1; }
+#panel-content { display:none; flex-direction:column; height:100%; overflow:hidden; }
+
+/* Panel top bar with expand button */
+#panel-top {
+  padding:16px 18px 12px; border-bottom:1px solid #e2e8f0;
+  flex-shrink:0; background:#f8fafc;
+  position:relative;
+}
+#expand-btn {
+  position:absolute; top:12px; right:14px;
+  width:28px; height:28px; border-radius:7px; cursor:pointer;
+  background:#eff6ff; border:1px solid #bfdbfe;
+  color:#2563eb; font-size:14px;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.18s; z-index:2; flex-shrink:0;
+}
+#expand-btn:hover { background:#dbeafe; transform:scale(1.1); }
+
+.panel-name { font-size:17px; font-weight:700; color:#0f172a; margin-bottom:6px; line-height:1.2; padding-right:36px; }
+.panel-badges { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:10px; align-items:center; }
+.type-tag { font-size:11px; padding:3px 9px; border-radius:5px; font-weight:700; letter-spacing:0.5px; }
+.tag-up   { background:#dbeafe; color:#1d4ed8; border:1px solid #bfdbfe; }
+.tag-down { background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; }
+.tag-hub  { background:#ede9fe; color:#6d28d9; border:1px solid #ddd6fe; }
+
+.metrics-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.metric-box {
+  background:#ffffff; border:1px solid #e2e8f0;
+  border-radius:8px; padding:9px 11px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.04);
+}
+.metric-label { font-size:10px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:4px; }
+.metric-value { font-size:13px; font-weight:700; color:#0f172a; }
+
+#panel-scroll { flex:1; overflow-y:auto; padding:0 18px 20px; }
+#panel-scroll::-webkit-scrollbar { width:4px; }
+#panel-scroll::-webkit-scrollbar-track { background:#f8fafc; }
+#panel-scroll::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:2px; }
+
+/* ── FULLSCREEN OVERLAY ── */
+#panel-overlay {
+  display:none;
+  position:fixed; inset:0; z-index:500;
+  background:rgba(15,23,42,0.55);
+  backdrop-filter:blur(3px);
+  align-items:center; justify-content:center;
+}
+#panel-overlay.open { display:flex; }
+
+#overlay-card {
+  background:#ffffff; border-radius:16px;
+  width:min(900px, 94vw); height:min(88vh, 860px);
+  display:flex; flex-direction:column;
+  box-shadow:0 24px 64px rgba(0,0,0,0.2);
+  overflow:hidden;
+  animation:overlayIn 0.22s cubic-bezier(.4,0,.2,1);
+}
+@keyframes overlayIn { from{opacity:0;transform:scale(0.95)} to{opacity:1;transform:scale(1)} }
+
+#overlay-top {
+  padding:20px 24px 14px;
+  border-bottom:1px solid #e2e8f0;
+  background:#f8fafc; flex-shrink:0;
+  display:flex; align-items:flex-start; gap:12px;
+}
+#overlay-top .ov-info { flex:1; }
+#close-overlay {
+  flex-shrink:0; width:32px; height:32px; border-radius:8px;
+  background:#f1f5f9; border:1px solid #e2e8f0;
+  color:#64748b; font-size:16px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.15s; margin-top:2px;
+}
+#close-overlay:hover { background:#fee2e2; border-color:#fca5a5; color:#dc2626; }
+
+.ov-name { font-size:22px; font-weight:800; color:#0f172a; margin-bottom:8px; line-height:1.15; }
+.ov-badges { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+
+#overlay-metrics {
+  display:flex; gap:12px; padding:14px 24px;
+  border-bottom:1px solid #e2e8f0; flex-wrap:wrap; background:#fff;
+}
+#overlay-metrics .metric-box { min-width:140px; flex:1; }
+
+#overlay-scroll {
+  flex:1; overflow-y:auto; padding:0 24px 28px;
+}
+#overlay-scroll::-webkit-scrollbar { width:5px; }
+#overlay-scroll::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:3px; }
+
+/* Wider table in overlay */
+#overlay-scroll .firms-table td { font-size:13px; padding:9px 10px; }
+#overlay-scroll .firms-table th { padding:8px 10px; }
+#overlay-scroll .thesis-text { font-size:13.5px; line-height:1.8; }
+#overlay-scroll .bb-box li { font-size:12.5px; }
+#overlay-scroll .private-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px;
+}
+
+.tension-tag {
+  display:inline-flex; align-items:center; gap:5px;
+  font-size:11px; font-weight:700; padding:3px 8px; border-radius:5px;
+}
+.t-critical { background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; }
+.t-high     { background:#ffedd5; color:#c2410c; border:1px solid #fdba74; }
+.t-medium   { background:#fef9c3; color:#a16207; border:1px solid #fde047; }
+.t-demand   { background:#dcfce7; color:#15803d; border:1px solid #86efac; }
+
+.section-title {
+  font-size:11px; text-transform:uppercase; letter-spacing:1.2px; color:#94a3b8;
+  margin:16px 0 8px; padding-bottom:5px; border-bottom:1px solid #f1f5f9;
+  font-weight:600;
+}
+
+.firms-table { width:100%; border-collapse:collapse; }
+.firms-table th {
+  font-size:10px; color:#94a3b8; text-align:left; padding:4px 6px;
+  text-transform:uppercase; letter-spacing:0.5px;
+}
+.firms-table td { font-size:12.5px; padding:6px 6px; border-bottom:1px solid #f1f5f9; color:#334155; vertical-align:middle; }
+.firms-table tr:last-child td { border-bottom:none; }
+.firms-table tr:hover td { background:#f8fafc; }
+.ticker-cell { font-weight:700; font-family:'Courier New',monospace; color:#1d4ed8; font-size:13px; }
+.firm-name-cell { font-weight:600; color:#1e293b; font-size:12.5px; }
+.firm-role { font-size:11px; color:#94a3b8; margin-top:2px; font-weight:400; line-height:1.4; }
+.growth-pos { color:#16a34a; font-weight:700; }
+.growth-neg { color:#dc2626; font-weight:700; }
+.growth-neu { color:#d97706; font-weight:700; }
+
+.signal {
+  font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; letter-spacing:0.3px; white-space:nowrap;
+}
+.sig-sb  { background:#dcfce7; color:#15803d; border:1px solid #86efac; }
+.sig-buy { background:#dbeafe; color:#1d4ed8; border:1px solid #93c5fd; }
+.sig-hold{ background:#fef9c3; color:#a16207; border:1px solid #fde047; }
+.sig-cau { background:#ffedd5; color:#c2410c; border:1px solid #fdba74; }
+.sig-avd { background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; }
+.sig-spec{ background:#ede9fe; color:#6d28d9; border:1px solid #c4b5fd; }
+
+.private-item {
+  background:#f8fafc; border:1px solid #e2e8f0;
+  border-radius:8px; padding:10px 12px; margin-bottom:6px;
+}
+.private-name { font-weight:600; color:#0f172a; font-size:13px; }
+.private-meta { font-size:11.5px; color:#64748b; margin-top:4px; line-height:1.4; }
+
+.thesis-text { font-size:13px; color:#475569; line-height:1.75; }
+
+.bull-bear { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px; }
+.bb-box { border-radius:8px; padding:12px; }
+.bb-bull { background:#f0fdf4; border:1px solid #bbf7d0; }
+.bb-bear { background:#fff1f2; border:1px solid #fecdd3; }
+.bb-title { font-size:11px; font-weight:700; margin-bottom:8px; letter-spacing:0.5px; }
+.bb-bull .bb-title { color:#15803d; }
+.bb-bear .bb-title { color:#dc2626; }
+.bb-box ul { padding-left:14px; }
+.bb-box li { font-size:11.5px; color:#475569; line-height:1.6; margin-bottom:4px; }
+
+/* ── SVG CANVAS ── */
+#canvas {
+  position:fixed; top:64px; left:220px; right:340px; bottom:30px; overflow:hidden;
+  background:#f0f4f8;
+}
+svg { display:block; width:100%; height:100%; }
+.node circle { transition:filter 0.2s, stroke-width 0.2s; }
+.node:hover circle { filter:brightness(0.88) saturate(1.3); }
+.node:hover { cursor:pointer; }
+.node text { pointer-events:none; user-select:none; }
+.link { fill:none; }
+
+/* ── INFO BAR ── */
+#info-bar {
+  position:fixed; bottom:0; left:220px; right:340px; z-index:100;
+  background:#ffffff; border-top:1px solid #e2e8f0;
+  padding:7px 20px; font-size:12px; color:#94a3b8;
+  display:flex; justify-content:space-between; align-items:center;
+  height:30px;
+}
+
+/* ── ZOOM BTNS ── */
+#zoom-btns {
+  position:fixed; bottom:40px; left:228px; z-index:100;
+  display:flex; flex-direction:column; gap:5px;
+}
+.ctrl-btn {
+  width:36px; height:36px; border-radius:8px; cursor:pointer;
+  background:#ffffff; border:1px solid #e2e8f0;
+  color:#2563eb; font-size:18px; display:flex; align-items:center; justify-content:center;
+  transition:all 0.18s; box-shadow:0 2px 6px rgba(0,0,0,0.08);
+}
+.ctrl-btn:hover { background:#eff6ff; border-color:#93c5fd; transform:scale(1.08); }
+
+/* ── PULSING ANIMATION ── */
+@keyframes pulse { 0%,100%{ opacity:0.8; } 50%{ opacity:0.15; } }
+.pulse-ring { animation:pulse 2.2s ease-in-out infinite; }
+
+/* ── SUBTLE CANVAS VIGNETTE ── */
+#canvas::before {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(ellipse 65% 65% at 50% 50%, transparent 55%, rgba(226,232,240,0.4) 100%);
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="header">
+  <div>
+    <h1>__TITLE__</h1>
+    <p>__SUBTITLE__</p>
+  </div>
+  <div class="starlink-badge">__HEADER_BADGE__</div>
+</div>
+
+<!-- LEFT PANEL -->
+<div id="left-panel">
+  <h3>Filter View</h3>
+  <button class="filter-btn active" data-filter="all">All Sectors</button>
+  <button class="filter-btn" data-filter="upstream">Upstream Only</button>
+  <button class="filter-btn" data-filter="downstream">Downstream Only</button>
+  <button class="filter-btn" data-filter="critical">Critical Bottlenecks</button>
+  <button class="filter-btn" data-filter="conviction5">5-Star Conviction</button>
+
+  <div class="legend-section">
+    <h3 style="margin-top:4px;">Node Color</h3>
+    <div class="legend-item"><div class="leg-dot" style="background:#ef4444;box-shadow:0 0 5px #ef4444"></div>Critical Bottleneck</div>
+    <div class="legend-item"><div class="leg-dot" style="background:#f97316"></div>High Risk Supply</div>
+    <div class="legend-item"><div class="leg-dot" style="background:#eab308"></div>Medium / Balanced</div>
+    <div class="legend-item"><div class="leg-dot" style="background:#22c55e"></div>Demand-Led Growth</div>
+    <div class="legend-item"><div class="leg-dot" style="background:#3b82f6"></div>Hub / Center</div>
+    <div class="legend-item" style="margin-top:4px;"><div class="leg-line" style="background:linear-gradient(90deg,#3b82f6,#6366f1)"></div>Upstream link</div>
+    <div class="legend-item"><div class="leg-line" style="background:linear-gradient(90deg,#22c55e,#10b981)"></div>Downstream link</div>
+  </div>
+
+</div>
+
+<!-- RIGHT PANEL -->
+<div id="right-panel">
+  <div id="panel-placeholder">
+    <div class="ph-icon">🛰️</div>
+    <div class="ph-title">Investment Brief</div>
+    <p>Click any sector bubble to see public tickers, revenue, growth signals, supply tension, thesis, and bull/bear analysis.</p>
+  </div>
+  <div id="panel-content"></div>
+</div>
+
+<!-- FULLSCREEN OVERLAY -->
+<div id="panel-overlay">
+  <div id="overlay-card">
+    <div id="overlay-top">
+      <div class="ov-info">
+        <div class="ov-name" id="ov-name"></div>
+        <div class="ov-badges" id="ov-badges"></div>
+      </div>
+      <button id="close-overlay" title="Close">✕</button>
+    </div>
+    <div id="overlay-metrics"></div>
+    <div id="overlay-scroll"></div>
+  </div>
+</div>
+
+<!-- CANVAS -->
+<div id="canvas">
+  <svg id="mindmap"></svg>
+</div>
+
+<!-- INFO BAR -->
+<div id="info-bar">
+  <span>Scroll to zoom · Drag to pan · Click bubble to expand/collapse &amp; open Brief · ⤢ to fullscreen</span>
+  <span>Data: May 2026 — ParkPine Venture Research</span>
+</div>
+
+<!-- ZOOM BUTTONS -->
+<div id="zoom-btns">
+  <button class="ctrl-btn" id="zi">+</button>
+  <button class="ctrl-btn" id="zo">&#8722;</button>
+  <button class="ctrl-btn" id="zr">&#8962;</button>
+</div>
+
+<script>
+// ── DATA (injected by generator) ────────────────────────────────────────────
+const DATA = __MINDMAP_DATA__;
+
+// ── LAYOUT ───────────────────────────────────────────────────────────────────
+const canvasEl = document.getElementById('canvas');
+const W = canvasEl.clientWidth, H = canvasEl.clientHeight;
+const CX = W/2, CY = H/2;
+
+const svg = d3.select('#mindmap').attr('width', W).attr('height', H);
+const g   = svg.append('g');
+
+function initCollapse(node, depth) {
+  node._depth     = depth;
+  node._collapsed = depth >= 1;
+  node._filtered  = false;          // true = hidden from graph entirely
+  if (node.children) node.children.forEach(c => initCollapse(c, depth+1));
+}
+initCollapse(DATA, 0);
+DATA._collapsed = false;
+
+function computeLayout(root) {
+  const nodes = [], links = [];
+  function traverse(node, parent, depth, a0, a1) {
+    if (node._filtered) return;     // skip this node AND its entire subtree
+    const angle = (a0+a1)/2;
+    const rr = [0, 210, 390, 540][Math.min(depth, 3)];
+    node._x     = CX + rr * Math.cos(angle - Math.PI/2);
+    node._y     = CY + rr * Math.sin(angle - Math.PI/2);
+    node._angle = angle;
+    node._depth = depth;
+    nodes.push(node);
+    if (parent) links.push({source:parent, target:node});
+    if (node.children && node.children.length && !node._collapsed) {
+      const step = (a1-a0)/node.children.length;
+      node.children.forEach((c,i) => traverse(c, node, depth+1, a0+i*step, a0+(i+1)*step));
+    }
+  }
+  traverse(root, null, 0, 0, 2*Math.PI);
+  return {nodes, links};
+}
+
+// ── COLORS ───────────────────────────────────────────────────────────────────
+const riskColor = r => (['#3b82f6','#10b981','#22c55e','#eab308','#f97316','#ef4444'])[Math.min(r,5)];
+const tensionColor = t => ({critical:'#ef4444',high:'#f97316',medium:'#eab308','demand-led':'#22c55e',hub:'#3b82f6'})[t]||'#3b82f6';
+const linkColor   = node => node.type==='upstream'?'#3b82f6':'#22c55e';
+const nodeR       = d => ([60,50,30,20])[Math.min(d,3)];
+const starsStr    = n => '★'.repeat(n)+'☆'.repeat(5-n);
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render() {
+  const {nodes, links} = computeLayout(DATA);
+
+  // ── defs
+  let defs = svg.select('defs');
+  if (defs.empty()) defs = svg.append('defs');
+  if (defs.select('#glow').empty()) {
+    const f = defs.append('filter').attr('id','glow');
+    f.append('feGaussianBlur').attr('stdDeviation','3').attr('result','coloredBlur');
+    const m = f.append('feMerge');
+    m.append('feMergeNode').attr('in','coloredBlur');
+    m.append('feMergeNode').attr('in','SourceGraphic');
+  }
+
+  // ── links
+  g.selectAll('.link').remove();
+  g.selectAll('.link').data(links).enter().append('path')
+    .attr('class','link')
+    .attr('d', d=>{
+      const sx=d.source._x, sy=d.source._y, tx=d.target._x, ty=d.target._y;
+      const mx=(sx+tx)/2, my=(sy+ty)/2;
+      return 'M'+sx+','+sy+' Q'+(CX+(mx-CX)*0.3)+','+(CY+(my-CY)*0.3)+' '+tx+','+ty;
+    })
+    .attr('stroke', d=>linkColor(d.target))
+    .attr('stroke-width', d=>Math.max(1, 3-d.target._depth*0.8))
+    .attr('stroke-opacity', d=>0.3+d.target._depth*0.05)
+    .attr('stroke-dasharray', d=>d.target._depth>=2?'4,3':'none');
+
+  // ── nodes
+  g.selectAll('.node').remove();
+  const nodeG = g.selectAll('.node').data(nodes).enter().append('g')
+    .attr('class','node')
+    .attr('transform', d=>'translate('+d._x+','+d._y+')')
+    .style('cursor', d=>(d.children&&d.children.length)?'pointer':'default')
+    .on('click', (ev,d) => {
+      ev.stopPropagation();
+      if (d.children && d.children.length) { d._collapsed = !d._collapsed; render(); }
+      openPanel(d);
+    })
+    .on('mouseover', (ev,d) => openPanel(d));
+
+  // pulsing outer ring for critical supply tension
+  nodeG.filter(d=>d.supplyTension==='critical')
+    .append('circle')
+    .attr('class','pulse-ring')
+    .attr('r', d=>nodeR(d._depth)+9)
+    .attr('fill','none')
+    .attr('stroke', d=>tensionColor(d.supplyTension))
+    .attr('stroke-width',2)
+    .attr('stroke-opacity',0.5);
+
+  // tension ring (all nodes)
+  nodeG.filter(d=>d._depth>0)
+    .append('circle')
+    .attr('r', d=>nodeR(d._depth)+4)
+    .attr('fill','none')
+    .attr('stroke', d=>tensionColor(d.supplyTension||'hub'))
+    .attr('stroke-width',1.5)
+    .attr('stroke-opacity',0.35);
+
+  // main circle
+  nodeG.append('circle')
+    .attr('r', d=>nodeR(d._depth))
+    .attr('fill', d=>(riskColor(d.risk))+'26')
+    .attr('stroke', d=>riskColor(d.risk))
+    .attr('stroke-width', d=>d._depth===0?3:2)
+    .attr('filter', d=>d.risk>=4?'url(#glow)':null);
+
+  // expand dot
+  nodeG.filter(d=>d.children&&d.children.length&&d._depth>0)
+    .append('circle')
+    .attr('cx', d=>nodeR(d._depth)-5).attr('cy', d=>-(nodeR(d._depth)-5))
+    .attr('r',5).attr('fill',d=>d._collapsed?'#22c55e':'#ef4444')
+    .attr('stroke','#f0f4f8').attr('stroke-width',1.5);
+  nodeG.filter(d=>d.children&&d.children.length&&d._depth>0)
+    .append('text')
+    .attr('x', d=>nodeR(d._depth)-5).attr('y', d=>-(nodeR(d._depth)-5))
+    .attr('text-anchor','middle').attr('dominant-baseline','central')
+    .attr('fill','#fff').attr('font-size','8px').attr('font-weight','700')
+    .attr('pointer-events','none')
+    .text(d=>d._collapsed?'+':'-');
+
+  // node labels (name lines)
+  nodeG.each(function(d) {
+    const el = d3.select(this);
+    const lines = d.name.split('\n');
+    const fs = d._depth===0?13:d._depth===1?12:10.5;
+    const isLeft  = d._x < CX-15;
+    const isRight = d._x > CX+15;
+    const isTop   = d._y < CY-15;
+    const isBot   = d._y > CY+15;
+    const anchor  = d._depth===0?'middle':(isLeft?'end':'start');
+    const xOff    = d._depth===0?0:(isLeft?-(nodeR(d._depth)+6):(isRight?nodeR(d._depth)+6:0));
+    const r = nodeR(d._depth);
+    let yBase;
+    if (d._depth===0) yBase = -(lines.length-1)*(fs+2)/2;
+    else if (isBot)   yBase = r+10;
+    else if (isTop)   yBase = -(r+10+(lines.length-1)*(fs+3));
+    else              yBase = -(lines.length-1)*(fs+2)/2;
+
+    lines.forEach((line,i) => {
+      el.append('text')
+        .attr('x', xOff).attr('y', yBase + i*(fs+3))
+        .attr('text-anchor', d._depth===0?'middle':anchor)
+        .attr('dominant-baseline','hanging')
+        .attr('fill', d._depth<=1?'#1e293b':'#475569').attr('font-size',fs+'px')
+        .attr('font-weight', d._depth===0?'700':d._depth===1?'600':'500')
+        .text(line);
+    });
+
+    // conviction stars (depth 1)
+    if (d._depth===1 && d.conviction) {
+      const sy = isBot ? r+10+lines.length*(fs+3) : isTop ? -(r+22+lines.length*(fs+3)) : r+14;
+      el.append('text')
+        .attr('x',xOff).attr('y',sy)
+        .attr('text-anchor',anchor)
+        .attr('dominant-baseline','hanging')
+        .attr('fill','#f59e0b').attr('font-size','11px')
+        .attr('pointer-events','none')
+        .text(starsStr(d.conviction));
+    }
+
+    // TAM label (depth 1)
+    if (d._depth===1 && d.tam && d.tam!=='N/A — risk factor') {
+      const ty2 = isBot ? r+10+lines.length*(fs+3)+15 : isTop ? -(r+36+lines.length*(fs+3)) : r+28;
+      el.append('text')
+        .attr('x',xOff).attr('y',ty2)
+        .attr('text-anchor',anchor)
+        .attr('dominant-baseline','hanging')
+        .attr('fill','#64748b').attr('font-size','9.5px')
+        .attr('pointer-events','none')
+        .text(d.tam);
+    }
+
+    // ticker chips (depth 1, show 2)
+    if (d._depth===1 && d.tickers && d.tickers.length) {
+      const chips = d.tickers.slice(0,2);
+      const chipW = 36, chipH = 16, gap = 5;
+      const totalW = chips.length*(chipW+gap)-gap;
+      const cx2 = d._depth===0?0:(isLeft?xOff-totalW/2:isRight?xOff+totalW/2:0);
+      const cy2 = isBot ? r+10+lines.length*(fs+3)+26 : isTop ? -(r+48+lines.length*(fs+3)) : r+40;
+      chips.forEach((tk,ii) => {
+        const tx2 = cx2 + ii*(chipW+gap) - totalW/2;
+        const chipG = el.append('g').attr('pointer-events','none');
+        chipG.append('rect')
+          .attr('x',tx2).attr('y',cy2)
+          .attr('width',chipW).attr('height',chipH)
+          .attr('rx',4).attr('fill','#eff6ff').attr('stroke','#93c5fd').attr('stroke-width',1);
+        chipG.append('text')
+          .attr('x',tx2+chipW/2).attr('y',cy2+chipH/2)
+          .attr('text-anchor','middle').attr('dominant-baseline','central')
+          .attr('fill','#1d4ed8').attr('font-size','9.5px').attr('font-weight','700')
+          .text(tk);
+      });
+    }
+
+    // ticker chips (depth 2, show 1)
+    if (d._depth===2 && d.tickers && d.tickers.length) {
+      const tk = d.tickers[0];
+      const chipW = 34, chipH = 14;
+      const cy2 = isBot ? nodeR(2)+10+lines.length*(10.5+3)+6 : isTop ? -(nodeR(2)+26+lines.length*(10.5+3)) : nodeR(2)+20;
+      const tx2 = xOff - chipW/2;
+      const chipG = el.append('g').attr('pointer-events','none');
+      chipG.append('rect')
+        .attr('x',tx2).attr('y',cy2)
+        .attr('width',chipW).attr('height',chipH)
+        .attr('rx',4).attr('fill','#eff6ff').attr('stroke','#93c5fd').attr('stroke-width',1);
+      chipG.append('text')
+        .attr('x',tx2+chipW/2).attr('y',cy2+chipH/2)
+        .attr('text-anchor','middle').attr('dominant-baseline','central')
+        .attr('fill','#1d4ed8').attr('font-size','9px').attr('font-weight','700')
+        .text(tk);
+    }
+
+    // risk badge in root
+    if (d._depth===0) {
+      el.append('text').attr('x',0).attr('y',26)
+        .attr('text-anchor','middle').attr('dominant-baseline','central')
+        .attr('fill','#94a3b8').attr('font-size','10px').attr('font-weight','500')
+        .attr('pointer-events','none').text('Click nodes to explore');
+    }
+  });
+}
+
+// ── INVESTMENT PANEL ─────────────────────────────────────────────────────────
+function signalLabel(s) {
+  return ({
+    'sig-sb':   '<span class="signal sig-sb">STRONG BUY</span>',
+    'sig-buy':  '<span class="signal sig-buy">BUY</span>',
+    'sig-hold': '<span class="signal sig-hold">HOLD</span>',
+    'sig-cau':  '<span class="signal sig-cau">CAUTIOUS</span>',
+    'sig-avd':  '<span class="signal sig-avd">AVOID</span>',
+    'sig-spec': '<span class="signal sig-spec">SPECULATIVE</span>',
+  })[s]||'';
+}
+
+function tensionTag(t) {
+  const map = {
+    critical:    ['t-critical','⚡ CRITICAL'],
+    high:        ['t-high','⚠ HIGH'],
+    medium:      ['t-medium','↔ MEDIUM'],
+    'demand-led':['t-demand','📈 DEMAND-LED'],
+    hub:         ['t-demand','— HUB'],
+  };
+  const [cls,label] = map[t]||['t-demand','—'];
+  return '<span class="tension-tag '+cls+'">'+label+'</span>';
+}
+
+function typeTag(t) {
+  if (t==='upstream')   return '<span class="type-tag tag-up">⬆ UPSTREAM</span>';
+  if (t==='downstream') return '<span class="type-tag tag-down">⬇ DOWNSTREAM</span>';
+  return '<span class="type-tag tag-hub">◉ HUB</span>';
+}
+
+// Build the inner HTML content (shared by sidebar and overlay)
+function buildPanelContent(d) {
+  const pf = (d.publicFirms||[]).map(f=>{
+    const gCls = f.growth.startsWith('-')?'growth-neg':f.growth.startsWith('+')?'growth-pos':'growth-neu';
+    return '<tr>'
+      +'<td class="ticker-cell">'+f.ticker+'</td>'
+      +'<td><div class="firm-name-cell">'+f.name+'</div>'+(f.role?'<div class="firm-role">'+f.role+'</div>':'')+'</td>'
+      +'<td>'+f.rev+'</td>'
+      +'<td class="'+gCls+'">'+f.growth+'</td>'
+      +'<td>'+signalLabel(f.signal)+'</td>'
+      +'</tr>';
+  }).join('');
+
+  const pvf = (d.privateFirms||[]).map(p=>
+    '<div class="private-item"><div class="private-name">'+(p.name||p)+'</div>'
+    +(p.meta?'<div class="private-meta">'+p.meta+'</div>':'')+'</div>'
+  ).join('');
+
+  const bull = (d.bull||[]).map(b=>'<li>'+b+'</li>').join('');
+  const bear = (d.bear||[]).map(b=>'<li>'+b+'</li>').join('');
+
+  return (pf
+    ? '<div class="section-title">Public Investment Plays</div>'
+      +'<table class="firms-table"><tr><th>Ticker</th><th>Company &amp; Role</th><th>Revenue</th><th>Growth</th><th>Signal</th></tr>'
+      +pf+'</table>'
+    : '')
+    +(pvf
+      ? '<div class="section-title">Private / IPO Watch</div>'+pvf
+      : '')
+    +'<div class="section-title">Investment Thesis</div>'
+    +'<p class="thesis-text">'+d.thesis+'</p>'
+    +(bull||bear
+      ? '<div class="section-title">Bull vs Bear</div>'
+        +'<div class="bull-bear">'
+        +(bull?'<div class="bb-box bb-bull"><div class="bb-title">🟢 BULL</div><ul>'+bull+'</ul></div>':'')
+        +(bear?'<div class="bb-box bb-bear"><div class="bb-title">🔴 BEAR</div><ul>'+bear+'</ul></div>':'')
+        +'</div>'
+      : '');
+}
+
+// Current node being displayed (so expand button can reference it)
+let _currentNode = null;
+
+function openPanel(d) {
+  _currentNode = d;
+
+  // Show panel, hide placeholder
+  document.getElementById('panel-placeholder').style.display = 'none';
+  const pc = document.getElementById('panel-content');
+  pc.style.display = 'flex';
+
+  // ── Top section
+  const panelTop = document.getElementById('panel-top') || (() => {
+    const el = document.createElement('div');
+    el.id = 'panel-top';
+    pc.prepend(el);
+    return el;
+  })();
+
+  panelTop.innerHTML =
+    '<button id="expand-btn" title="Fullscreen view">⤢</button>'
+    +'<div class="panel-name">'+d.name.replace('\n',' ')+'</div>'
+    +'<div class="panel-badges">'
+      +typeTag(d.type)
+      +(d.conviction?'<span style="color:#f59e0b;font-size:13px;">'+starsStr(d.conviction)+'</span>':'')
+    +'</div>'
+    +'<div class="metrics-grid">'
+      +'<div class="metric-box"><div class="metric-label">Market Opp.</div><div class="metric-value">'+d.tam+'</div></div>'
+      +'<div class="metric-box"><div class="metric-label">Supply Tension</div><div class="metric-value">'+tensionTag(d.supplyTension)+'</div></div>'
+    +'</div>';
+
+  // ── Scrollable body
+  let ps = document.getElementById('panel-scroll');
+  if (!ps) {
+    ps = document.createElement('div');
+    ps.id = 'panel-scroll';
+    pc.appendChild(ps);
+  }
+  ps.innerHTML = buildPanelContent(d);
+
+  // Wire expand button
+  document.getElementById('expand-btn').onclick = openOverlay;
+}
+
+// ── FULLSCREEN OVERLAY ────────────────────────────────────────────────────────
+function openOverlay() {
+  const d = _currentNode;
+  if (!d) return;
+
+  document.getElementById('ov-name').textContent   = d.name.replace('\n',' ');
+  document.getElementById('ov-badges').innerHTML   =
+    typeTag(d.type)
+    +(d.conviction?'<span style="color:#f59e0b;font-size:15px;margin-left:4px;">'+starsStr(d.conviction)+'</span>':'')
+    +tensionTag(d.supplyTension||'hub');
+
+  document.getElementById('overlay-metrics').innerHTML =
+    '<div class="metric-box"><div class="metric-label">Market Opportunity</div><div class="metric-value">'+d.tam+'</div></div>'
+    +'<div class="metric-box"><div class="metric-label">Supply Tension</div><div class="metric-value">'+tensionTag(d.supplyTension||'hub')+'</div></div>'
+    +(d.conviction
+      ? '<div class="metric-box"><div class="metric-label">Conviction</div><div class="metric-value" style="color:#f59e0b;">'+starsStr(d.conviction)+' '+d.conviction+'/5</div></div>'
+      : '');
+
+  // Overlay gets a wider firms table (add Market Cap column)
+  const pf = (d.publicFirms||[]).map(f=>{
+    const gCls = f.growth.startsWith('-')?'growth-neg':f.growth.startsWith('+')?'growth-pos':'growth-neu';
+    return '<tr>'
+      +'<td class="ticker-cell">'+f.ticker+'</td>'
+      +'<td><div class="firm-name-cell">'+f.name+'</div>'+(f.role?'<div class="firm-role">'+f.role+'</div>':'')+'</td>'
+      +'<td>'+f.rev+'</td>'
+      +'<td class="'+gCls+'">'+f.growth+'</td>'
+      +'<td>'+(f.cap||'—')+'</td>'
+      +'<td>'+signalLabel(f.signal)+'</td>'
+      +'</tr>';
+  }).join('');
+
+  const pvf = (d.privateFirms||[]).map(p=>
+    '<div class="private-item"><div class="private-name">'+(p.name||p)+'</div>'
+    +(p.meta?'<div class="private-meta">'+p.meta+'</div>':'')+'</div>'
+  ).join('');
+
+  const bull = (d.bull||[]).map(b=>'<li>'+b+'</li>').join('');
+  const bear = (d.bear||[]).map(b=>'<li>'+b+'</li>').join('');
+
+  document.getElementById('overlay-scroll').innerHTML =
+    (pf
+      ? '<div class="section-title">Public Investment Plays</div>'
+        +'<table class="firms-table"><tr><th>Ticker</th><th>Company &amp; Role in Sector</th><th>Revenue</th><th>Growth</th><th>Market Cap</th><th>Signal</th></tr>'
+        +pf+'</table>'
+      : '')
+    +(pvf
+      ? '<div class="section-title">Private / IPO Watch</div><div class="private-grid">'+pvf+'</div>'
+      : '')
+    +'<div class="section-title">Investment Thesis</div>'
+    +'<p class="thesis-text" style="font-size:13.5px;line-height:1.8;">'+d.thesis+'</p>'
+    +(bull||bear
+      ? '<div class="section-title">Bull vs Bear</div>'
+        +'<div class="bull-bear">'
+        +(bull?'<div class="bb-box bb-bull"><div class="bb-title">🟢 BULL CASE</div><ul>'+bull+'</ul></div>':'')
+        +(bear?'<div class="bb-box bb-bear"><div class="bb-title">🔴 BEAR CASE</div><ul>'+bear+'</ul></div>':'')
+        +'</div>'
+      : '');
+
+  document.getElementById('panel-overlay').classList.add('open');
+}
+
+// Close overlay on backdrop click or close button
+document.getElementById('panel-overlay').addEventListener('click', e=>{
+  if (e.target === document.getElementById('panel-overlay'))
+    document.getElementById('panel-overlay').classList.remove('open');
+});
+document.getElementById('close-overlay').addEventListener('click', ()=>{
+  document.getElementById('panel-overlay').classList.remove('open');
+});
+// Close with Escape key
+document.addEventListener('keydown', e=>{
+  if (e.key==='Escape') document.getElementById('panel-overlay').classList.remove('open');
+});
+
+// ── ZOOM & CONTROLS ──────────────────────────────────────────────────────────
+const zoom = d3.zoom().scaleExtent([0.25,4]).on('zoom', e=>g.attr('transform',e.transform));
+svg.call(zoom);
+document.getElementById('zi').onclick = ()=>svg.transition().call(zoom.scaleBy,1.4);
+document.getElementById('zo').onclick = ()=>svg.transition().call(zoom.scaleBy,0.7);
+document.getElementById('zr').onclick = ()=>svg.transition().call(zoom.transform,d3.zoomIdentity);
+
+// ── FILTER BUTTONS ────────────────────────────────────────────────────────────
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.onclick = function() {
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    this.classList.add('active');
+    const f = this.dataset.filter;
+    function applyFilter(node) {
+      // Root is always visible and expanded
+      if (node._depth === 0) {
+        node._filtered  = false;
+        node._collapsed = false;
+        if (node.children) node.children.forEach(applyFilter);
+        return;
+      }
+
+      // Depth-1 sectors: decide visibility based on filter
+      if (node._depth === 1) {
+        if (f === 'all') {
+          node._filtered  = false;
+          node._collapsed = true;   // show sectors collapsed by default
+        } else if (f === 'upstream') {
+          node._filtered  = (node.type === 'downstream');
+          node._collapsed = true;
+        } else if (f === 'downstream') {
+          node._filtered  = (node.type === 'upstream');
+          node._collapsed = true;
+        } else if (f === 'critical') {
+          node._filtered  = (node.supplyTension !== 'critical');
+          node._collapsed = false;  // auto-expand matching sectors
+        } else if (f === 'conviction5') {
+          node._filtered  = ((node.conviction || 0) < 5);
+          node._collapsed = false;  // auto-expand matching sectors
+        }
+      } else {
+        // Depth 2+ nodes: always show if parent wasn't filtered
+        // (parent's _filtered=true already stops traversal, so we only
+        //  reach here for children of visible parents)
+        node._filtered  = false;
+        node._collapsed = (node._depth >= 3);
+      }
+
+      if (node.children) node.children.forEach(applyFilter);
+    }
+    applyFilter(DATA);
+    render();
+  };
+});
+
+// ── RESIZE ────────────────────────────────────────────────────────────────────
+window.addEventListener('resize', ()=>{
+  const nW = canvasEl.clientWidth, nH = canvasEl.clientHeight;
+  svg.attr('width',nW).attr('height',nH);
+});
+
+// ── INITIAL RENDER ────────────────────────────────────────────────────────────
+render();
+svg.call(zoom.transform, d3.zoomIdentity.scale(0.82));
+setTimeout(()=>svg.transition().duration(900).call(zoom.transform,d3.zoomIdentity),120);
+</script>
+</body>
+</html>
+

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Intelligence Mindmap Generator</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',system-ui,Arial,sans-serif; background:#f0f4f8; color:#1e2d3d; }
+
+.hero {
+  background:linear-gradient(135deg,#0f172a 0%,#1d4ed8 60%,#2563eb 100%);
+  color:#fff; padding:80px 40px 60px; text-align:center;
+}
+.hero h1 { font-size:42px; font-weight:800; margin-bottom:14px; letter-spacing:-0.5px; }
+.hero p  { font-size:18px; opacity:0.85; max-width:640px; margin:0 auto 32px; line-height:1.7; }
+.badge {
+  display:inline-block; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3);
+  border-radius:8px; padding:8px 18px; font-size:13px; font-weight:600; margin:0 6px 8px;
+  letter-spacing:0.3px;
+}
+
+.cta-row { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:32px; }
+.btn {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:14px 28px; border-radius:10px; font-size:15px; font-weight:700;
+  text-decoration:none; transition:all 0.18s; cursor:pointer;
+}
+.btn-primary { background:#ffffff; color:#1d4ed8; }
+.btn-primary:hover { background:#eff6ff; transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,0,0,0.2); }
+.btn-secondary { background:transparent; color:#fff; border:2px solid rgba(255,255,255,0.5); }
+.btn-secondary:hover { background:rgba(255,255,255,0.1); transform:translateY(-2px); }
+
+.section { padding:64px 40px; max-width:1100px; margin:0 auto; }
+.section-title {
+  font-size:11px; text-transform:uppercase; letter-spacing:2px; color:#94a3b8;
+  font-weight:700; margin-bottom:24px; padding-bottom:8px; border-bottom:1px solid #e2e8f0;
+}
+
+.examples-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px; }
+.example-card {
+  background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:24px;
+  text-decoration:none; color:inherit; transition:all 0.18s;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+.example-card:hover {
+  transform:translateY(-4px); box-shadow:0 12px 32px rgba(0,0,0,0.1);
+  border-color:#93c5fd;
+}
+.card-icon { font-size:32px; margin-bottom:12px; }
+.card-title { font-size:17px; font-weight:700; color:#0f172a; margin-bottom:6px; }
+.card-desc { font-size:13px; color:#64748b; line-height:1.6; }
+.card-tags { display:flex; gap:6px; flex-wrap:wrap; margin-top:12px; }
+.tag {
+  font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px;
+  text-transform:uppercase; letter-spacing:0.4px;
+}
+.tag-up   { background:#dbeafe; color:#1d4ed8; }
+.tag-down { background:#dcfce7; color:#15803d; }
+.tag-crit { background:#fee2e2; color:#dc2626; }
+
+.steps { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:20px; margin-top:8px; }
+.step {
+  background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:22px;
+  box-shadow:0 1px 4px rgba(0,0,0,0.04);
+}
+.step-num {
+  width:32px; height:32px; border-radius:8px; background:#eff6ff;
+  color:#1d4ed8; font-size:14px; font-weight:800; display:flex;
+  align-items:center; justify-content:center; margin-bottom:12px;
+}
+.step h3 { font-size:15px; font-weight:700; margin-bottom:6px; color:#0f172a; }
+.step p  { font-size:13px; color:#64748b; line-height:1.6; }
+
+.code-block {
+  background:#0f172a; color:#e2e8f0; border-radius:10px; padding:20px 24px;
+  font-family:'Courier New',monospace; font-size:13.5px; line-height:1.8;
+  overflow-x:auto; margin-top:16px;
+}
+.code-comment { color:#64748b; }
+.code-cmd { color:#7ec8ff; }
+.code-arg { color:#86efac; }
+
+footer {
+  background:#ffffff; border-top:1px solid #e2e8f0;
+  padding:24px 40px; text-align:center; font-size:12px; color:#94a3b8;
+}
+footer a { color:#64748b; text-decoration:none; }
+footer a:hover { color:#1d4ed8; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>📡 Market Intelligence Mindmap</h1>
+  <p>Generate interactive investment-grade supply chain mindmaps for any sector, narrative, or macro theme — powered by Claude AI.</p>
+  <div>
+    <span class="badge">⬆ Upstream Bottlenecks</span>
+    <span class="badge">⬇ Downstream Beneficiaries</span>
+    <span class="badge">📊 Real Tickers &amp; Revenue</span>
+    <span class="badge">🎯 Investment Signals</span>
+    <span class="badge">⤢ Fullscreen Brief</span>
+  </div>
+  <div class="cta-row">
+    <a href="examples/space-economy.html" class="btn btn-primary">🛰️ View Live Demo — Space Economy</a>
+    <a href="https://github.com/parkpineventure/market-mindmap" class="btn btn-secondary">⭐ GitHub Repo</a>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Live Examples</div>
+  <div class="examples-grid">
+    <a href="examples/space-economy.html" class="example-card">
+      <div class="card-icon">🛰️</div>
+      <div class="card-title">Space Economy</div>
+      <div class="card-desc">SpaceX Starship · Starlink 10M subs · $11.4B rev · Upstream bottlenecks from rad-hard chips to rare earths · Downstream from AVs to defense</div>
+      <div class="card-tags">
+        <span class="tag tag-crit">Critical: Rad-Hard ICs</span>
+        <span class="tag tag-crit">Critical: Rare Earths</span>
+        <span class="tag tag-down">Downstream: AVs</span>
+      </div>
+    </a>
+    <div class="example-card" style="opacity:0.5;cursor:default;">
+      <div class="card-icon">🤖</div>
+      <div class="card-title">AI Infrastructure <span style="font-size:11px;color:#94a3b8;">(generate your own)</span></div>
+      <div class="card-desc">NVIDIA GB200 · $400B capex cycle · HBM memory · Power infrastructure · Data center REITs · AI application layer</div>
+      <div class="card-tags">
+        <span class="tag tag-crit">Critical: HBM Supply</span>
+        <span class="tag tag-up">Upstream: Power</span>
+        <span class="tag tag-down">Downstream: SaaS</span>
+      </div>
+    </div>
+    <div class="example-card" style="opacity:0.5;cursor:default;">
+      <div class="card-icon">💊</div>
+      <div class="card-title">GLP-1 / Ozempic Ecosystem <span style="font-size:11px;color:#94a3b8;">(generate your own)</span></div>
+      <div class="card-desc">Novo Nordisk · Eli Lilly · $150B+ market · API supply constraints · Cold chain · Downstream: food, fitness, cardiac care</div>
+      <div class="card-tags">
+        <span class="tag tag-crit">Critical: API Supply</span>
+        <span class="tag tag-down">Downstream: Food</span>
+        <span class="tag tag-down">Downstream: Cardiac</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="background:#ffffff;max-width:100%;padding:64px 0;">
+  <div style="max-width:1100px;margin:0 auto;padding:0 40px;">
+    <div class="section-title">How to Generate Your Own</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Install</h3>
+        <p>Clone the repo and install the Python dependency.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Set API Key</h3>
+        <p>Add your Anthropic API key as an environment variable.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Generate</h3>
+        <p>Run <code>generate.py</code> with your topic. Claude researches and builds the full interactive mindmap.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Open &amp; Share</h3>
+        <p>Open the output HTML in any browser. No server needed — fully self-contained.</p>
+      </div>
+    </div>
+
+    <div class="code-block">
+<span class="code-comment"># Clone &amp; install</span>
+<span class="code-cmd">git clone</span> <span class="code-arg">https://github.com/parkpineventure/market-mindmap</span>
+<span class="code-cmd">cd</span> <span class="code-arg">market-mindmap</span>
+<span class="code-cmd">pip install</span> <span class="code-arg">-r requirements.txt</span>
+
+<span class="code-comment"># Set API key (Windows PowerShell)</span>
+<span class="code-cmd">$env:ANTHROPIC_API_KEY</span> <span class="code-arg">= "sk-ant-..."</span>
+
+<span class="code-comment"># Generate a mindmap for any topic</span>
+<span class="code-cmd">python generate.py</span> <span class="code-arg">"AI Infrastructure buildout"</span>
+<span class="code-cmd">python generate.py</span> <span class="code-arg">"GLP-1 drug ecosystem" --output glp1.html</span>
+<span class="code-cmd">python generate.py</span> <span class="code-arg">"Copper supply chain critical minerals"</span>
+<span class="code-cmd">python generate.py</span> <span class="code-arg">"US defence tech after Ukraine"</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Features</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">📡</div>
+      <h3>Radial Supply Chain Map</h3>
+      <p>D3.js interactive mindmap with upstream bottlenecks and downstream beneficiaries. Zoom, pan, expand/collapse sectors.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">📋</div>
+      <h3>Investment Brief Panel</h3>
+      <p>Click any bubble to open a sidebar with public tickers, revenue, growth, market cap, investment signals, and a bull/bear thesis.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">⤢</div>
+      <h3>Fullscreen Mode</h3>
+      <p>Expand any Investment Brief into a full-screen overlay with wider firm tables, private IPO watch, and detailed bull/bear cases.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">🔍</div>
+      <h3>Filter &amp; Focus</h3>
+      <p>Filter by upstream only, downstream only, critical bottlenecks, or highest-conviction plays with one click.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">🏷️</div>
+      <h3>Sector Role Labels</h3>
+      <p>Every ticker includes a one-liner explaining exactly what that company does in the specific sector — not just who they are.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">🤖</div>
+      <h3>AI-Powered Research</h3>
+      <p>Claude researches real revenue, growth rates, market caps, supply tensions, and writes investment theses from current data.</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Built by <a href="#">ParkPine Venture</a> · Powered by <a href="https://www.anthropic.com">Anthropic Claude</a> · <a href="https://d3js.org">D3.js</a>
+  &nbsp;·&nbsp; Data is AI-generated for research purposes, not financial advice.
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "name": "mindmap",
+  "version": "1.0.0",
+  "description": "Generate interactive investment-grade supply chain mindmaps for any sector, narrative, or macro theme. Outputs a self-contained HTML file with D3.js visualization, Investment Brief sidebar, fullscreen overlay, and filter controls.",
+  "author": "ParkPine Venture",
+  "license": "MIT",
+  "repository": "https://github.com/parkpineventure/mindmap-skill",
+  "homepage": "https://parkpineventure.github.io/mindmap-skill",
+  "skill": "skills/mindmap/SKILL.md",
+  "commands": [
+    {
+      "name": "mindmap",
+      "description": "Generate an investment mindmap for any sector or market narrative",
+      "usage": "/mindmap <topic> [--output <filename>]",
+      "examples": [
+        "/mindmap AI infrastructure buildout",
+        "/mindmap GLP-1 drug ecosystem --output glp1.html",
+        "/mindmap Copper supply chain",
+        "/mindmap US defence tech post-Ukraine"
+      ]
+    }
+  ],
+  "tags": ["investment", "finance", "supply-chain", "visualization", "d3js", "mindmap", "research"]
+}

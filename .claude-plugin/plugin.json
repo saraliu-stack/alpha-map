@@ -1,8 +1,8 @@
 {
-  "name": "mindmap",
+  "name": "alpha-map",
   "version": "1.0.0",
-  "description": "Generate interactive investment-grade supply chain mindmaps for any sector, narrative, or macro theme. Outputs a self-contained HTML file with D3.js visualization, Investment Brief sidebar, fullscreen overlay, and filter controls.",
-  "author": "ParkPine Venture",
+  "description": "Generate interactive investment-grade supply chain maps for any sector, narrative, or macro theme. Outputs a self-contained HTML file with D3.js visualization, tickers, revenue, investment signals, and fullscreen briefs. Works on Claude Code, Cursor, Copilot, and Windsurf.",
+  "author": "saraliu-stack",
   "license": "MIT",
   "repository": "https://github.com/saraliu-stack/alpha-map",
   "homepage": "https://saraliu-stack.github.io/alpha-map",
@@ -20,5 +20,5 @@
       ]
     }
   ],
-  "tags": ["investment", "finance", "supply-chain", "visualization", "d3js", "mindmap", "research"]
+  "tags": ["investment", "finance", "supply-chain", "visualization", "d3js", "research", "market-intelligence", "interactive", "agent-skill"]
 }
